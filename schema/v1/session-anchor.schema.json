@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/session-anchor.schema.json",
+  "title": "TRACE Session Anchor",
+  "description": "The brain owned ledger entry for one harness session. The outer container for CONFIDE call records. Created by the brain, never derived from harness storage.",
+  "type": "object",
+  "required": ["contractVersion", "anchorId", "harnessId", "hostId", "actor",
+               "scope", "openedAt", "state", "evidenceGrade", "signature"],
+  "additionalProperties": false,
+  "$defs": {
+    "grade": {
+      "enum": ["observed", "attested"],
+      "description": "observed came from a mechanism the brain controls. attested came from the harness and is not sole sufficient evidence."
+    }
+  },
+  "properties": {
+    "contractVersion": { "const": "trace-anchor/v1" },
+    "anchorId": { "type": "string", "minLength": 8 },
+    "harnessId": { "type": "string", "pattern": "^harness:[a-z0-9][a-z0-9._-]*$" },
+    "harnessVersion": { "type": ["string", "null"] },
+    "hostId": { "type": "string" },
+    "externalSessionId": {
+      "type": ["string", "null"],
+      "description": "The harness's own session identifier. Always attested."
+    },
+    "actor": { "type": "string" },
+    "authorizationId": {
+      "type": ["string", "null"],
+      "description": "The CONFIDE inference authorization in force for this session."
+    },
+    "scope": {
+      "type": "array", "minItems": 1,
+      "items": { "type": "string" },
+      "description": "The brain surfaces this session could reach. Used to bound sensitivity when the read set is unknown."
+    },
+    "openedAt": { "type": "string", "format": "date-time" },
+    "closedAt": { "type": ["string", "null"], "format": "date-time" },
+    "state": {
+      "enum": ["open", "sealed", "abandoned", "reconstructed"],
+      "description": "reconstructed anchors are wholly attested and MUST NOT satisfy the session-unanchored invariant."
+    },
+    "recordsRead": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["recordId", "sensitivity", "grade"],
+        "properties": {
+          "recordId": { "type": "string" },
+          "bodySha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+          "sensitivity": { "enum": ["none", "personal", "third-party", "confidential"] },
+          "custodyFloor": { "oneOf": [{ "enum": ["C0", "C1", "C2", "C3", "C4"] }, { "type": "null" }] },
+          "grade": { "$ref": "#/$defs/grade" }
+        }
+      }
+    },
+    "recordsWritten": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["recordId", "grade"],
+        "properties": {
+          "recordId": { "type": "string" },
+          "bodySha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+          "stage": { "type": ["string", "null"] },
+          "grade": { "$ref": "#/$defs/grade" }
+        }
+      }
+    },
+    "callIds": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "CONFIDE call records attributed to this session. Every id absent from the call ledger is failure class anchor-claims-unknown-call."
+    },
+    "computedSensitivity": {
+      "enum": ["none", "personal", "third-party", "confidential"],
+      "description": "The maximum sensitivity of any record read or written. Never an average."
+    },
+    "computedCustodyFloor": {
+      "oneOf": [{ "enum": ["C0", "C1", "C2", "C3", "C4"] }, { "type": "null" }],
+      "description": "The strongest floor of any record in the session."
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["class", "sourcePath", "grade"],
+        "properties": {
+          "class": { "enum": ["A0", "A1", "A2", "A3", "A4", "A5"] },
+          "sourcePath": { "type": "string" },
+          "sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+          "bytes": { "type": ["integer", "null"] },
+          "sealed": { "type": "boolean" },
+          "sealEntryId": { "type": ["string", "null"] },
+          "grade": { "$ref": "#/$defs/grade" }
+        }
+      }
+    },
+    "violations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "TRACE or CONFIDE failure classes raised during this session."
+    },
+    "evidenceGrade": {
+      "$ref": "#/$defs/grade",
+      "description": "The weakest grade among this anchor's claims. Any report presenting the anchor MUST show it."
+    },
+    "prevEntrySha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "signature": {
+      "type": "object",
+      "required": ["alg", "keyId", "sig"],
+      "properties": {
+        "alg": { "enum": ["ed25519", "eip191"] },
+        "keyId": { "type": "string" },
+        "sig": { "type": "string" }
+      }
+    }
+  }
+}

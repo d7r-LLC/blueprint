@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/role.schema.json",
+  "title": "DEFER Role",
+  "description": "A named position that holds authority envelopes. A role is defined independently of the actor holding it. An agent definition never confers authority; only a delegation grant does.",
+  "type": "object",
+  "required": ["contractVersion", "roleId", "name", "heldBy", "createdAt"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "defer-role/v1" },
+    "roleId": { "type": "string", "pattern": "^role:[a-z0-9][a-z0-9._-]*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "reportsTo": {
+      "type": ["string", "null"],
+      "pattern": "^role:[a-z0-9][a-z0-9._-]*$",
+      "description": "Notification and outcome ownership only. Confers no authority and MUST NOT be walked during routing (DEFER 3.2)."
+    },
+    "heldBy": {
+      "type": "array",
+      "items": { "type": "string", "description": "Actor identity. An empty array is a vacant role; its envelopes are unexercisable (DEFER 3.4)." }
+    },
+    "isOwner": { "type": "boolean", "default": false, "description": "Exactly one role in a brain may set this. The owner is the terminal approver." },
+    "suspended": { "type": "boolean", "default": false, "description": "Suspension renders held envelopes unexercisable without revoking any grant (DEFER 8.5)." },
+    "raciDefaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "consultedBy": { "type": "array", "items": { "type": "string", "pattern": "^role:[a-z0-9][a-z0-9._-]*$" } },
+        "informedBy": { "type": "array", "items": { "type": "string", "pattern": "^role:[a-z0-9][a-z0-9._-]*$" } }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "withdrawnAt": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

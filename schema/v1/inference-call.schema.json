@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/inference-call.schema.json",
+  "title": "CONFIDE Inference Call Record",
+  "description": "One append only ledger entry per call attempt, whether completed, refused, or failed. Records hashes, never prompt or response text.",
+  "type": "object",
+  "required": ["contractVersion", "callId", "authorizationId", "authorizationSha256",
+               "providerId", "custodyClass", "actor", "purpose", "inputs",
+               "startedAt", "verdict", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "confide-call/v1" },
+    "callId": { "type": "string", "minLength": 8 },
+    "authorizationId": { "type": "string" },
+    "authorizationSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "providerId": { "type": "string", "pattern": "^infer:[a-z0-9][a-z0-9._-]*$" },
+    "modelId": { "type": ["string", "null"] },
+    "modelVersion": { "type": ["string", "null"] },
+    "modelVersionObserved": {
+      "type": ["string", "null"],
+      "description": "As reported by the provider. A mismatch with modelVersion is failure class model-substitution."
+    },
+    "custodyClass": { "enum": ["C0", "C1", "C2", "C3", "C4"] },
+    "actor": { "type": "string" },
+    "purpose": { "enum": ["summarize", "classify", "extract", "draft", "translate", "embed", "critique", "rerank", "transcribe"] },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["recordId", "bodySha256", "sensitivity"],
+        "properties": {
+          "recordId": { "type": "string" },
+          "bodySha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "sensitivity": { "enum": ["none", "personal", "third-party", "confidential"] },
+          "classification": { "type": ["string", "null"] },
+          "custodyFloor": {
+            "oneOf": [{ "enum": ["C0", "C1", "C2", "C3", "C4"] }, { "type": "null" }],
+            "description": "Present when the record was admitted from a peer brain. Never weakened."
+          },
+          "originBrainId": { "type": ["string", "null"] },
+          "readDuringLoopTurn": { "type": ["integer", "null"] }
+        }
+      }
+    },
+    "promptSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "promptBytes": { "type": ["integer", "null"] },
+    "redactionManifestSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "outputSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "outputBytes": { "type": ["integer", "null"] },
+    "outputRecordIds": { "type": "array", "items": { "type": "string" } },
+    "transcriptRef": {
+      "type": ["object", "null"],
+      "description": "Hash only pointer to a transcript held on a separate surface. Never inline text.",
+      "properties": {
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "surface": { "type": "string" }
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "properties": {
+        "in": { "type": "integer" },
+        "out": { "type": "integer" },
+        "cachedIn": { "type": "integer" }
+      }
+    },
+    "loopTurns": { "type": ["integer", "null"] },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": ["string", "null"], "format": "date-time" },
+    "verdict": { "enum": ["completed", "refused", "failed"] },
+    "failureClass": {
+      "oneOf": [
+        { "enum": ["authorization-absent", "authorization-expired", "authorization-revoked",
+                   "actor-unauthorized", "provider-unregistered", "provider-suspended",
+                   "provider-prohibited", "evidence-expired", "custody-class-exceeded",
+                   "sensitivity-exceeds-custody", "scope-not-permitted",
+                   "processing-consent-absent", "denied-key-present", "redaction-not-applied",
+                   "rate-limit-exceeded", "payload-too-large", "model-undeclared",
+                   "model-substitution", "custody-floor-violation", "ledger-unavailable",
+                   "registry-unreadable", "purpose-not-permitted", "transport-error"] },
+        { "type": "null" }
+      ]
+    },
+    "detail": { "type": ["string", "null"] },
+    "prevEntrySha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "signature": {
+      "type": "object",
+      "required": ["alg", "keyId", "sig"],
+      "properties": {
+        "alg": { "enum": ["ed25519", "eip191"] },
+        "keyId": { "type": "string" },
+        "sig": { "type": "string" }
+      }
+    }
+  }
+}

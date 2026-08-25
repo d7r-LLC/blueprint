@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/receipt.schema.json",
+  "title": "SPEAK Receipt",
+  "type": "object",
+  "required": ["contractVersion", "receiptId", "utteranceId", "payloadSha256",
+               "listener", "verdict", "observedAt", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "speak-receipt/v1" },
+    "receiptId": { "type": "string" },
+    "utteranceId": { "type": "string" },
+    "payloadSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "listener": {
+      "type": "object",
+      "required": ["brainId", "keyId"],
+      "properties": {
+        "brainId": { "type": "string" },
+        "keyId": { "type": "string" }
+      }
+    },
+    "verdict": { "enum": ["admitted", "quarantined", "rejected"] },
+    "failureClass": { "type": ["string", "null"] },
+    "detail": { "type": ["string", "null"] },
+    "observedAt": { "type": "string", "format": "date-time" },
+    "prevEntrySha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "signature": {
+      "type": "object",
+      "required": ["alg", "keyId", "sig"],
+      "properties": {
+        "alg": { "enum": ["ed25519", "eip191"] },
+        "keyId": { "type": "string" },
+        "sig": { "type": "string" }
+      }
+    }
+  }
+}

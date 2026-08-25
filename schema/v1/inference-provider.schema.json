@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/inference-provider.schema.json",
+  "title": "CONFIDE Inference Provider",
+  "description": "A provider record describes one endpoint under one set of terms. It never describes a company.",
+  "type": "object",
+  "required": ["contractVersion", "providerId", "displayName", "custodyClass", "operator",
+               "egress", "retention", "evidence", "models", "limits", "status"],
+  "additionalProperties": false,
+  "$defs": {
+    "posture": { "oneOf": [{ "type": "string" }, { "const": "unknown" }] },
+    "tristate": { "enum": ["prohibited", "permitted", "unknown"] }
+  },
+  "properties": {
+    "contractVersion": { "const": "confide-provider/v1" },
+    "providerId": { "type": "string", "pattern": "^infer:[a-z0-9][a-z0-9._-]*$" },
+    "displayName": { "type": "string" },
+    "custodyClass": {
+      "enum": ["C0", "C1", "C2", "C3", "C4"],
+      "description": "C0 Resident, C1 Enclave, C2 Tenant, C3 Broker, C4 Open. Declared, never inferred from a vendor name."
+    },
+    "effectiveCustodyClass": {
+      "enum": ["C0", "C1", "C2", "C3", "C4"],
+      "description": "Weakest class in the provider chain. Equals custodyClass when there are no subprocessors."
+    },
+    "operator": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["self", "infrastructure-vendor", "model-vendor", "routing-service"] },
+        "legalName": { "type": "string" },
+        "jurisdiction": { "type": "string" }
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "properties": {
+        "owner": { "enum": ["self", "vendor", "unknown"] },
+        "physicalCustody": { "enum": ["self", "vendor", "unknown"] },
+        "host": { "type": "string" },
+        "diskEncryptionKeyHolder": { "enum": ["self", "vendor", "none", "unknown"] }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "properties": {
+        "uri": { "type": "string" },
+        "contractTier": { "type": "string" }
+      }
+    },
+    "egress": {
+      "enum": ["none", "provider-only", "provider-and-subprocessors", "unknown"],
+      "description": "none is only valid for C0."
+    },
+    "retention": {
+      "type": "object",
+      "required": ["inputRetention", "outputRetention", "trainingUse", "humanReview",
+                   "promptCaching", "subprocessors", "jurisdictions", "deletionRight"],
+      "properties": {
+        "inputRetention": { "$ref": "#/$defs/posture" },
+        "outputRetention": { "$ref": "#/$defs/posture" },
+        "trainingUse": { "$ref": "#/$defs/tristate" },
+        "humanReview": { "enum": ["prohibited", "permitted-for-abuse-only", "permitted", "unknown"] },
+        "promptCaching": { "enum": ["disabled", "enabled", "unknown"] },
+        "subprocessors": {
+          "oneOf": [
+            { "type": "array", "items": { "type": "string" } },
+            { "const": "unknown" }
+          ],
+          "description": "unknown forces effectiveCustodyClass to C4."
+        },
+        "jurisdictions": { "type": "array", "items": { "type": "string" } },
+        "deletionRight": { "enum": ["self", "contractual", "none", "unknown"] }
+      }
+    },
+    "evidence": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["kind", "sha256", "retrievedAt", "expiresAt"],
+        "properties": {
+          "kind": { "enum": ["contract", "dpa", "published-terms", "attestation", "self-hosted", "audit-report"] },
+          "uri": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "retrievedAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "supports": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "models": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["modelId", "version"],
+        "properties": {
+          "modelId": { "type": "string" },
+          "family": { "type": "string" },
+          "version": { "type": "string" },
+          "weightsSha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+          "quantization": { "type": ["string", "null"] },
+          "contextWindow": { "type": ["integer", "null"] }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "required": ["maxSensitivity"],
+      "properties": {
+        "maxSensitivity": { "enum": ["none", "personal", "third-party", "confidential"] },
+        "maxClassification": { "enum": ["public", "peer-internal", "peer-confidential", "brain-portable"] },
+        "maxPayloadBytes": { "type": "integer" }
+      }
+    },
+    "status": { "enum": ["draft", "authorized", "probationary", "suspended", "prohibited"] },
+    "statusReason": { "type": ["string", "null"] },
+    "authorizedBy": {
+      "type": ["object", "null"],
+      "required": ["actor", "at", "keyId", "sig"],
+      "properties": {
+        "actor": { "type": "string" },
+        "at": { "type": "string", "format": "date-time" },
+        "keyId": { "type": "string" },
+        "sig": { "type": "string" }
+      }
+    },
+    "nextReviewDue": { "type": "string", "format": "date-time" }
+  }
+}

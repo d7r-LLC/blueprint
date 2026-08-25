@@ -1,0 +1,325 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/brain-charter.schema.json",
+  "title": "Blueprint Brain Charter",
+  "type": "object",
+  "required": [
+    "contractVersion",
+    "brainId",
+    "owner",
+    "keys",
+    "tier",
+    "layers",
+    "createdAt",
+    "signature"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": {
+      "const": "blueprint-charter/v1"
+    },
+    "brainId": {
+      "type": "string",
+      "pattern": "^brain:[a-z0-9][a-z0-9._-]*$"
+    },
+    "displayName": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "object",
+      "required": [
+        "kind",
+        "legalName"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "individual",
+            "organization"
+          ]
+        },
+        "legalName": {
+          "type": "string"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "sagaIdentity": {
+          "type": "string"
+        }
+      }
+    },
+    "keys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "keyId",
+          "alg",
+          "publicKey",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "keyId": {
+            "type": "string"
+          },
+          "alg": {
+            "enum": [
+              "ed25519",
+              "eip191"
+            ]
+          },
+          "publicKey": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "retired",
+              "revoked"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "retiredAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "revokedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "revocationReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "lineage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "derivesFrom",
+          "originEntity",
+          "relationship"
+        ],
+        "properties": {
+          "derivesFrom": {
+            "type": "string"
+          },
+          "originEntity": {
+            "type": "string"
+          },
+          "originOwner": {
+            "type": "string"
+          },
+          "relationship": {
+            "enum": [
+              "derivative-work",
+              "assignment",
+              "license",
+              "successor"
+            ]
+          },
+          "rightsBasis": {
+            "type": "string"
+          },
+          "transferPlanned": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "transferStatus": {
+            "enum": [
+              "none",
+              "pending",
+              "complete"
+            ]
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "tier": {
+      "enum": [
+        1,
+        2,
+        3
+      ]
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9
+      },
+      "uniqueItems": true
+    },
+    "license": {
+      "type": "string"
+    },
+    "constitutionPath": {
+      "type": "string"
+    },
+    "constitutionSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "revocationListPath": {
+      "type": "string"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "revisedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "signature": {
+      "type": "object",
+      "required": [
+        "keyId",
+        "alg",
+        "sig"
+      ],
+      "properties": {
+        "keyId": {
+          "type": "string"
+        },
+        "alg": {
+          "enum": [
+            "ed25519",
+            "eip191"
+          ]
+        },
+        "sig": {
+          "type": "string"
+        }
+      }
+    },
+    "inference": {
+      "type": "object",
+      "description": "CONFIDE posture. A brain that performs no inference declares operatesBroker false and maxCustodyClass C0.",
+      "required": [
+        "operatesBroker",
+        "defaultMaxCustodyClass",
+        "providerRegistryPath",
+        "callLedgerPath"
+      ],
+      "properties": {
+        "operatesBroker": {
+          "type": "boolean"
+        },
+        "defaultMaxCustodyClass": {
+          "enum": [
+            "C0",
+            "C1",
+            "C2",
+            "C3",
+            "C4"
+          ]
+        },
+        "providerRegistryPath": {
+          "type": "string"
+        },
+        "callLedgerPath": {
+          "type": "string"
+        },
+        "matrixOverridesPath": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Owner decisions that raise or lower a custody matrix cell. Absent means the CONFIDE defaults apply unmodified."
+        }
+      }
+    },
+    "tooling": {
+      "type": "object",
+      "description": "TRACE posture. A brain operated on by any agent harness declares its registry, artifact store, and scratch surfaces here.",
+      "required": [
+        "harnessRegistryPath",
+        "artifactLedgerPath",
+        "artifactStorePath",
+        "scratchSurfaces"
+      ],
+      "properties": {
+        "harnessRegistryPath": {
+          "type": "string"
+        },
+        "artifactLedgerPath": {
+          "type": "string"
+        },
+        "artifactStorePath": {
+          "type": "string",
+          "description": "Append only. MUST NOT be writable by any harness."
+        },
+        "sessionAnchorPath": {
+          "type": "string"
+        },
+        "scratchSurfaces": {
+          "type": "array",
+          "description": "Locations inside the brain folder where a file is not brain content. Every exception is enumerated, because an unenumerated exception is indistinguishable from a gap.",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "harnessId"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "harnessId": {
+                "type": "string"
+              },
+              "class": {
+                "enum": [
+                  "A0",
+                  "A1",
+                  "A2",
+                  "A3",
+                  "A4",
+                  "A5"
+                ]
+              }
+            }
+          }
+        },
+        "enumerationScanPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Paths swept for undeclared artifact roots per TRACE section 5.1."
+        }
+      }
+    }
+  }
+}

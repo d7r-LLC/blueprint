@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/artifact-seal.schema.json",
+  "title": "TRACE Artifact Ledger Entry",
+  "description": "One append only entry per sealed artifact, refusal, or deletion. Records digests and never artifact content.",
+  "type": "object",
+  "required": ["contractVersion", "entryId", "event", "class", "at", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "trace-artifact/v1" },
+    "entryId": { "type": "string", "minLength": 8 },
+    "event": { "enum": ["sealed", "seal-refused", "deleted", "vanished", "hold-placed", "hold-released", "unsealed-by-policy"] },
+    "anchorId": { "type": ["string", "null"] },
+    "harnessId": { "type": ["string", "null"] },
+    "class": { "enum": ["A0", "A1", "A2", "A3", "A4", "A5"] },
+    "sourcePath": { "type": ["string", "null"] },
+    "storePath": {
+      "type": ["string", "null"],
+      "description": "Location in the append only artifact store. Absent for refusals and deletions."
+    },
+    "sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "bytes": { "type": ["integer", "null"] },
+    "sensitivity": { "enum": ["none", "personal", "third-party", "confidential", "unknown"] },
+    "custodyFloor": { "oneOf": [{ "enum": ["C0", "C1", "C2", "C3", "C4"] }, { "type": "null" }] },
+    "inheritedFrom": { "type": ["string", "null"], "description": "Source record id for an A3 copy." },
+    "retentionExpiresAt": { "type": ["string", "null"], "format": "date-time" },
+    "hold": {
+      "type": ["object", "null"],
+      "required": ["placedBy", "reason"],
+      "description": "A hold MUST NOT expire automatically and outranks a retention expiry.",
+      "properties": {
+        "placedBy": { "type": "string" },
+        "reason": { "type": "string" },
+        "reference": { "type": ["string", "null"] }
+      }
+    },
+    "adoption": {
+      "type": ["object", "null"],
+      "description": "For A2 artifacts brought into the brain as records rather than expired.",
+      "properties": {
+        "recordIds": { "type": "array", "items": { "type": "string" } },
+        "decisionId": { "type": ["string", "null"] }
+      }
+    },
+    "failureClass": {
+      "oneOf": [
+        { "enum": ["credential-artifact-in-store", "seal-store-unreachable", "artifact-class-unassigned",
+                   "sensitivity-undeterminable", "protected-artifact-vanished",
+                   "protected-artifact-deleted-without-entry", "agent-attempted-artifact-deletion",
+                   "hold-violated", "backup-below-custody-floor"] },
+        { "type": "null" }
+      ]
+    },
+    "actor": {
+      "type": ["string", "null"],
+      "description": "For a deletion this MUST be an owner identity. An agent identity here is failure class agent-attempted-artifact-deletion."
+    },
+    "authorizingDecision": {
+      "type": ["string", "null"],
+      "description": "Required for a deletion. The purge manifest digest or owner decision record."
+    },
+    "reason": { "type": ["string", "null"] },
+    "evidenceGrade": { "enum": ["observed", "attested"] },
+    "at": { "type": "string", "format": "date-time" },
+    "prevEntrySha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+    "signature": {
+      "type": "object",
+      "required": ["alg", "keyId", "sig"],
+      "properties": {
+        "alg": { "enum": ["ed25519", "eip191"] },
+        "keyId": { "type": "string" },
+        "sig": { "type": "string" }
+      }
+    }
+  }
+}

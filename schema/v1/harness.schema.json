@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/harness.schema.json",
+  "title": "TRACE Agent Harness",
+  "description": "One record per harness per host. A harness mediates between an actor and an inference provider and can reach brain content. A harness is not a provider; register both separately.",
+  "type": "object",
+  "required": ["contractVersion", "harnessId", "displayName", "vendor", "host",
+               "version", "roots", "egress", "retention", "sealing", "status"],
+  "additionalProperties": false,
+  "$defs": {
+    "artifactClass": {
+      "enum": ["A0", "A1", "A2", "A3", "A4", "A5"],
+      "description": "A0 Directive, A1 Session, A2 Derived, A3 Copy, A4 Credential, A5 Telemetry."
+    },
+    "transmission": {
+      "enum": ["none", "vendor", "third-party", "unknown"],
+      "description": "unknown MUST be treated as transmitted."
+    },
+    "retentionPeriod": {
+      "type": "object",
+      "required": ["period", "basis"],
+      "properties": {
+        "period": {
+          "type": "string",
+          "description": "ISO 8601 duration, or the literal indefinite which is permitted only for A0."
+        },
+        "basis": { "type": "string", "description": "The decision, obligation, or agreement that sets this period." }
+      }
+    }
+  },
+  "properties": {
+    "contractVersion": { "const": "trace-harness/v1" },
+    "harnessId": { "type": "string", "pattern": "^harness:[a-z0-9][a-z0-9._-]*$" },
+    "displayName": { "type": "string" },
+    "vendor": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "providerId": {
+          "type": ["string", "null"],
+          "description": "The CONFIDE provider record for this vendor's inference endpoint, when the same vendor supplies both. Custody properties are unrelated and are declared there."
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "required": ["hostId"],
+      "properties": {
+        "hostId": { "type": "string" },
+        "role": { "type": "string" },
+        "os": { "type": "string" }
+      }
+    },
+    "version": {
+      "type": "object",
+      "required": ["declaredRange"],
+      "properties": {
+        "declaredRange": { "type": "string" },
+        "observed": { "type": ["string", "null"] },
+        "observedAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "roots": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "insideBrain", "defaultClass", "sealed"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Declared with the path anchors required by BLUEPRINT Layer 1. No machine absolute paths."
+          },
+          "insideBrain": {
+            "type": "boolean",
+            "description": "When true this root MUST also be declared as a Layer 2 scratch surface unless its class is A0."
+          },
+          "scratchSurface": { "type": "boolean" },
+          "defaultClass": {
+            "$ref": "#/$defs/artifactClass",
+            "description": "Applied to unmatched paths. MUST NOT be A5."
+          },
+          "classRules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["pattern", "class"],
+              "properties": {
+                "pattern": { "type": "string" },
+                "class": { "$ref": "#/$defs/artifactClass" },
+                "note": { "type": "string" }
+              }
+            }
+          },
+          "expectedGrowth": {
+            "type": ["object", "null"],
+            "properties": {
+              "maxBytes": { "type": "integer" },
+              "maxItems": { "type": "integer" }
+            }
+          },
+          "observed": {
+            "type": ["object", "null"],
+            "properties": {
+              "bytes": { "type": "integer" },
+              "items": { "type": "integer" },
+              "sweptAt": { "type": "string", "format": "date-time" }
+            }
+          },
+          "sealed": { "type": "boolean" }
+        }
+      }
+    },
+    "egress": {
+      "type": "object",
+      "required": ["A0", "A1", "A2", "A3", "A4", "A5"],
+      "description": "Per class transmission posture. Any of A1, A2, or A3 other than none requires a CONFIDE provider record per TRACE section 11.1.",
+      "properties": {
+        "A0": { "$ref": "#/$defs/transmission" },
+        "A1": { "$ref": "#/$defs/transmission" },
+        "A2": { "$ref": "#/$defs/transmission" },
+        "A3": { "$ref": "#/$defs/transmission" },
+        "A4": { "$ref": "#/$defs/transmission" },
+        "A5": { "$ref": "#/$defs/transmission" }
+      }
+    },
+    "telemetry": {
+      "type": "object",
+      "properties": {
+        "disableable": { "type": "boolean" },
+        "disabled": { "type": "boolean" },
+        "mayContain": {
+          "type": "array",
+          "items": { "enum": ["paths", "project-names", "record-titles", "prompt-fragments", "unknown"] }
+        },
+        "installationIdPath": { "type": ["string", "null"] }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "required": ["A0", "A1", "A2", "A3", "A5"],
+      "properties": {
+        "A0": { "$ref": "#/$defs/retentionPeriod" },
+        "A1": { "$ref": "#/$defs/retentionPeriod" },
+        "A2": { "$ref": "#/$defs/retentionPeriod" },
+        "A3": { "$ref": "#/$defs/retentionPeriod" },
+        "A5": { "$ref": "#/$defs/retentionPeriod" }
+      }
+    },
+    "sealing": {
+      "type": "object",
+      "required": ["policy"],
+      "properties": {
+        "policy": {
+          "enum": ["all-sessions", "selective", "none"],
+          "description": "selective MUST still seal every session that is confidential or third-party, wrote to a boundary surface, or reported a refusal."
+        },
+        "storePath": { "type": ["string", "null"] },
+        "unsealedRationale": { "type": ["string", "null"] }
+      }
+    },
+    "maxSensitivity": {
+      "enum": ["none", "personal", "third-party", "confidential"],
+      "description": "Highest record sensitivity this harness may be used against. A harness with telemetry posture unknown MUST NOT exceed none."
+    },
+    "directives": {
+      "type": "array",
+      "description": "A0 artifacts implementing Layer 7 charters, by in brain path and digest.",
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "implementsCharter": { "type": ["string", "null"] },
+          "versionControlled": { "type": "boolean" }
+        }
+      }
+    },
+    "status": { "enum": ["draft", "authorized", "probationary", "suspended", "prohibited"] },
+    "statusReason": { "type": ["string", "null"] },
+    "authorizedBy": {
+      "type": ["object", "null"],
+      "required": ["actor", "at", "keyId", "sig"],
+      "properties": {
+        "actor": { "type": "string" },
+        "at": { "type": "string", "format": "date-time" },
+        "keyId": { "type": "string" },
+        "sig": { "type": "string" }
+      }
+    },
+    "nextReviewDue": { "type": "string", "format": "date-time" }
+  }
+}

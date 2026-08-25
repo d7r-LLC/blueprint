@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/decision-record.schema.json",
+  "title": "DEFER Decision Record",
+  "description": "The append only Layer 6 ledger entry for a resolved decision. Must be verifiable after the fact without trusting current grant state (DEFER 12.3).",
+  "type": "object",
+  "required": ["contractVersion", "recordId", "requestId", "requestDigest", "consequenceClass", "meterReadings",
+               "envelopeInvoked", "grantChain", "resolution", "prevHash", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "defer-decision/v1" },
+    "recordId": { "type": "string", "pattern": "^drec:[a-z0-9][a-z0-9._/-]*$" },
+    "requestId": { "type": "string", "pattern": "^dreq:[a-z0-9][a-z0-9._/-]*$" },
+    "requestDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "consequenceClass": { "enum": ["K0", "K1", "K2", "K3", "K4"] },
+    "meterReadings": { "type": "object", "additionalProperties": { "type": ["number", "string"] } },
+    "classifierVersion": { "type": "string" },
+    "classificationDivergence": { "type": ["string", "null"] },
+    "envelopeInvoked": { "$ref": "https://blueprint-spec.dev/schema/v1/authority-envelope.schema.json" },
+    "grantChain": {
+      "type": "array", "minItems": 1,
+      "description": "Ordered from the invoked grant to the human root. Digests are pinned so later revocation cannot rewrite history (DEFER 8.4).",
+      "items": {
+        "type": "object",
+        "required": ["grantId", "grantDigest", "identityKind"],
+        "additionalProperties": false,
+        "properties": {
+          "grantId": { "type": "string", "pattern": "^grant:[a-z0-9][a-z0-9._/-]*$" },
+          "grantDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+          "identityKind": { "enum": ["human", "agent"] },
+          "validAtDecisionTime": { "const": true }
+        }
+      }
+    },
+    "humanRootReached": { "const": true, "description": "Absolute. A chain not reaching a human signature confers nothing." },
+    "resolution": {
+      "type": "object",
+      "required": ["outcome", "resolvedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "outcome": { "enum": ["approved", "denied", "lapsed", "withdrawn", "superseded"] },
+        "resolvedBy": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "actor": { "type": "string" },
+            "role": { "type": "string", "pattern": "^role:[a-z0-9][a-z0-9._-]*$" },
+            "identityKind": { "enum": ["human", "agent"] }
+          }
+        },
+        "automatic": { "type": "boolean", "default": false, "description": "True where a covering envelope resolved without review." },
+        "quorum": {
+          "type": ["array", "null"],
+          "description": "Each member resolves independently, without visibility of the others (DEFER 9.4).",
+          "items": {
+            "type": "object",
+            "required": ["role", "outcome", "individuallyCovering"],
+            "additionalProperties": false,
+            "properties": {
+              "role": { "type": "string" },
+              "outcome": { "enum": ["approved", "denied"] },
+              "individuallyCovering": { "const": true },
+              "resolvedAt": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "timeoutApplied": { "type": ["string", "null"], "enum": ["lapse", "default-safe", "hold-open", null] },
+        "escalationPath": {
+          "type": "array",
+          "description": "Each step MUST strictly cover the previous. Lateral or narrowing reassignment is DF-08.",
+          "items": { "type": "string", "pattern": "^role:[a-z0-9][a-z0-9._-]*$" }
+        },
+        "resolvedAt": { "type": "string", "format": "date-time" },
+        "executionWindow": { "type": "string", "description": "ISO 8601 duration. An approval not executed inside it expires (DEFER 9.6)." }
+      }
+    },
+    "execution": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "description": "Null requires nonExecutionReason. Two sided reconciliation (DEFER 12.2).",
+      "properties": {
+        "executedAt": { "type": "string", "format": "date-time" },
+        "executedBy": { "type": "string" },
+        "executedDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "nonExecutionReason": { "type": ["string", "null"] },
+    "crossReferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Where an act is also a harness session or a model call, all three records MUST agree (DEFER 12.2).",
+      "properties": {
+        "sessionAnchorId": { "type": "string" },
+        "inferenceCallIds": { "type": "array", "items": { "type": "string" } },
+        "utteranceId": { "type": "string" },
+        "artifactSealIds": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "polarisRefusals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["refusalId", "result", "evidenceGrade"],
+        "additionalProperties": false,
+        "properties": {
+          "refusalId": { "type": "string" },
+          "result": { "enum": ["pass", "refuse"] },
+          "evidenceGrade": { "const": "observed" }
+        }
+      }
+    },
+    "breakGlass": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "grantId": { "type": "string" },
+        "grantedBeforeIncident": { "const": true },
+        "ownerNotifiedAt": { "type": "string", "format": "date-time" },
+        "selfSuspendedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "evidenceGrades": {
+      "type": "object",
+      "additionalProperties": { "enum": ["observed", "attested"] },
+      "description": "An attested claim MUST NOT be sole evidence for a conformance assertion (DEFER 12.4)."
+    },
+    "prevHash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "signature": {
+      "type": "object",
+      "required": ["algorithm", "keyId", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "keyId": { "type": "string" },
+        "value": { "type": "string" }
+      }
+    }
+  }
+}

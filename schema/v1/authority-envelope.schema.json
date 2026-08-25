@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/authority-envelope.schema.json",
+  "title": "DEFER Authority Envelope",
+  "description": "A bounded region of decision space on four axes. All four MUST be present; an omitted axis is malformed, not unbounded (DEFER 4.1).",
+  "type": "object",
+  "required": ["actClasses", "scope", "magnitude", "conditions"],
+  "additionalProperties": false,
+  "properties": {
+    "actClasses": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "string",
+        "description": "Reserved required vocabulary plus any brain declared additions.",
+        "examples": ["propose", "apply-mechanical", "apply-substantive", "promote", "classify", "emit", "admit", "spend", "seal", "destroy", "grant", "amend"]
+      }
+    },
+    "scope": {
+      "type": "object",
+      "required": ["predicate"],
+      "additionalProperties": false,
+      "description": "A decidable predicate over the act target. MUST use path anchors, never machine absolute paths (DEFER 4.3).",
+      "properties": {
+        "predicate": { "type": "string" },
+        "domains": { "type": "array", "items": { "type": "string" } },
+        "pathAnchors": { "type": "array", "items": { "type": "string", "pattern": "^<(repo|brain|vault)>/" } },
+        "recordClasses": { "type": "array", "items": { "type": "string" } },
+        "stageRange": {
+          "type": "object", "additionalProperties": false,
+          "properties": { "from": { "type": "integer" }, "to": { "type": "integer" } }
+        },
+        "boundaries": {
+          "type": "array",
+          "items": { "enum": ["speak-peer", "confide-provider", "trace-vendor"] },
+          "description": "Required in scope for any envelope covering a K3 act (DEFER 6.2)."
+        }
+      }
+    },
+    "magnitude": {
+      "type": "object",
+      "required": ["perAct", "aggregates"],
+      "additionalProperties": false,
+      "description": "Both a per act ceiling and at least one windowed aggregate are required. A per act only bound is not a bound (DEFER 5.3).",
+      "properties": {
+        "unbounded": { "type": "boolean", "default": false, "description": "Permitted only for the owner role." },
+        "perAct": {
+          "type": "object",
+          "description": "Meter id to ceiling. Every meter MUST be computable before the act (DEFER 5.1).",
+          "additionalProperties": {
+            "oneOf": [
+              { "type": "number" },
+              { "enum": ["complete", "costly", "none"] }
+            ]
+          }
+        },
+        "aggregates": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["meter", "window", "ceiling"],
+            "additionalProperties": false,
+            "properties": {
+              "meter": { "type": "string" },
+              "window": { "type": "string", "description": "ISO 8601 duration." },
+              "ceiling": { "type": "number" },
+              "computedOver": {
+                "const": "delegation-chain",
+                "description": "Aggregates are computed per chain, never per actor, or they are escaped by provisioning more agents (DEFER 5.3)."
+              }
+            }
+          }
+        }
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "description": "Precedents evaluable by the brain. A condition asserted by the beneficiary is not a control (DEFER 4.4). The empty array is valid.",
+      "items": {
+        "type": "object",
+        "required": ["kind"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "enum": ["check-green", "gate-approved", "consultation-complete", "cooldown-elapsed", "quorum", "evidence-grade", "reversibility-floor"] },
+          "value": {},
+          "evaluatedBy": { "const": "brain" }
+        }
+      }
+    },
+    "breakGlass": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A break glass envelope is granted in advance, never during the incident it is used in (DEFER 7.4).",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "notifyChannel": { "type": "string" },
+        "selfSuspendOnUse": { "const": true },
+        "safeDirectionOnly": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

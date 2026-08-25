@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/mandate.schema.json",
+  "title": "RETAIN Mandate",
+  "description": "The engagement instrument between a principal and an agent brain. A Layer 8 companion to the peer agreement, never a replacement for it (RETAIN 6.1).",
+  "type": "object",
+  "required": ["contractVersion", "mandateId", "principal", "agentBrain", "rolesHeld", "projection",
+               "copyPolicy", "refusalFloor", "loyaltyDisclosure", "engagementDisclosure",
+               "registrations", "crossDomainControl", "admission", "term", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "retain-mandate/v1" },
+    "mandateId": { "type": "string", "pattern": "^mandate:[a-z0-9][a-z0-9._/-]*$" },
+    "principal": { "type": "string", "description": "The brain in which work is performed. Terms are relative to the engagement, never absolute." },
+    "agentBrain": {
+      "type": "object",
+      "required": ["brainId", "storeId", "placement", "custodyClass"],
+      "additionalProperties": false,
+      "properties": {
+        "brainId": { "type": "string" },
+        "storeId": { "type": "string", "pattern": "^store:[a-z0-9][a-z0-9._/-]*$" },
+        "ownerIdentity": { "type": "string" },
+        "placement": { "type": "string" },
+        "custodyClass": { "enum": ["C0", "C1", "C2", "C3", "C4"], "description": "Never a no retention class. Derived from placement, not from the relationship." }
+      }
+    },
+    "rolesHeld": {
+      "type": "array",
+      "description": "Roles in the principal that the agent identity holds. The mandate names them and neither creates nor widens them (RETAIN 6.1).",
+      "items": { "type": "string", "pattern": "^role:[a-z0-9][a-z0-9._-]*$" }
+    },
+    "containsEnvelope": {
+      "const": false,
+      "description": "Absolute. Authority is conferred by a delegation grant inside the principal, under DEFER. A mandate containing an envelope is RT-15."
+    },
+    "projection": {
+      "type": "object",
+      "required": ["projectionId", "digest", "digestBound"],
+      "additionalProperties": false,
+      "description": "Preferred over a read permission, because a projection's boundary can be inspected and a folder permission's cannot (RETAIN 8.3).",
+      "properties": {
+        "projectionId": { "type": "string" },
+        "elements": { "type": "array", "items": { "type": "string" }, "examples": [["objectives", "constraints", "claims", "open-decisions", "risks", "metrics"]] },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "digestBound": { "const": true, "description": "Regeneration changes the digest and dismisses prior approval, so stale consent cannot carry forward." },
+        "readPermissionFallback": { "type": ["string", "null"], "description": "Present only where a projection is not yet implemented. Reported as RT-28." }
+      }
+    },
+    "copyPolicy": {
+      "type": "object",
+      "required": ["expiry", "classificationFloor", "enumerable", "evidenceGrade"],
+      "additionalProperties": false,
+      "description": "The principal's material is held as TRACE A3 Copy: inherits classification, carries floors, expires (RETAIN 7.2).",
+      "properties": {
+        "expiry": { "type": "string", "description": "ISO 8601 duration or the token on-termination, which is the default." },
+        "classificationFloor": { "type": "string" },
+        "enumerable": { "const": true, "description": "The agent MUST be able to list the principal's copies it holds. One of two things nondisclosure does not cover." },
+        "evidenceGrade": {
+          "enum": ["observed", "attested"],
+          "description": "Attested where the principal cannot verify expiry. Recording this makes the residual exposure visible rather than assumed away (RETAIN 13.3)."
+        },
+        "derivedMaterial": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "disposition": { "enum": ["adopt", "expire"], "description": "TRACE A2. It MUST NOT quietly become a permanent asset of the agent." },
+            "unexpiringVolumeMeasured": { "type": "boolean", "description": "A summary of everything is a copy of everything (RETAIN 7.4)." }
+          }
+        },
+        "judgmentTest": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Could this judgment be stated to a different principal without disclosing anything about this one (RETAIN 7.3).",
+          "properties": {
+            "applied": { "type": "boolean" },
+            "auditableByPrincipal": { "const": true }
+          }
+        }
+      }
+    },
+    "refusalFloor": {
+      "type": "object",
+      "required": ["inheritedRefusals", "composition"],
+      "additionalProperties": false,
+      "properties": {
+        "inheritedRefusals": { "type": "array", "items": { "type": "string", "pattern": "^refuse:[a-z0-9][a-z0-9._-]*$" } },
+        "composition": { "const": "most-restrictive", "description": "The agent's own POLARIS plus the principal's floor. Additive, never exclusive (RETAIN 4.3)." },
+        "noOutsourcedRefusal": { "const": true, "description": "The principal MUST NOT admit what its own POLARIS would have refused to produce (RETAIN 7.5)." }
+      }
+    },
+    "loyaltyDisclosure": {
+      "type": "object",
+      "required": ["publishedBeforeAdmission", "order", "conflictDeclared"],
+      "additionalProperties": false,
+      "properties": {
+        "publishedBeforeAdmission": { "const": true },
+        "order": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+        "principalRank": { "type": "integer", "minimum": 1 },
+        "conflictDeclared": { "type": "boolean", "description": "True where any party outranks this principal." },
+        "conflictDecision": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "description": "Required when conflictDeclared. Disclosure without a recorded decision is RT-17.",
+          "properties": {
+            "disqualifies": { "type": "boolean" },
+            "decidedBy": { "type": "string" },
+            "decisionRecordId": { "type": "string" }
+          }
+        }
+      }
+    },
+    "engagementDisclosure": {
+      "type": "object",
+      "required": ["otherEngagementsExist", "exclusivityRequired"],
+      "additionalProperties": false,
+      "description": "Existence is disclosed; content is not. The principal MUST NOT rely on absence of disclosure (RETAIN 6.3).",
+      "properties": {
+        "otherEngagementsExist": { "type": "boolean" },
+        "count": { "type": ["integer", "null"], "minimum": 0 },
+        "exclusivityRequired": { "type": "boolean" }
+      }
+    },
+    "registrations": {
+      "type": "object",
+      "required": ["inferenceProviderId", "peerAgreementId", "reconciled"],
+      "additionalProperties": false,
+      "description": "Both are required. An agent brain is a provider and a peer at the same time (RETAIN 8.1).",
+      "properties": {
+        "inferenceProviderId": { "type": "string", "description": "CONFIDE registration for the continuous inbound flow." },
+        "peerAgreementId": { "type": "string", "description": "SPEAK agreement for deliberate outbound assertions." },
+        "reconciled": { "const": true, "description": "Where the two imply different limits, the more restrictive governs (RETAIN 8.2)." },
+        "singlePageReportRef": { "type": ["string", "null"], "description": "An agent brain that cannot be described on one page is one nobody is governing." }
+      }
+    },
+    "crossDomainControl": {
+      "type": "object",
+      "required": ["control", "preventionClaimed"],
+      "additionalProperties": false,
+      "description": "Cross domain learning is undetectable by construction. Controls are structural and applied before the engagement (RETAIN 11.3).",
+      "properties": {
+        "control": { "enum": ["per-principal-brains", "declared-engagement-history", "exclusivity", "none-accepted"] },
+        "preventionClaimed": { "const": false, "description": "A claim of prevention or detection is RT-39." },
+        "monitoringRelied": { "const": false }
+      }
+    },
+    "admission": {
+      "type": "object",
+      "required": ["consequenceClass", "decisionRecordId", "utterancesPreAdmitted"],
+      "additionalProperties": false,
+      "properties": {
+        "consequenceClass": { "enum": ["K3", "K4"], "description": "K3 minimum, since admission establishes a continuing boundary crossing. K4 where a named role holds a constitutional envelope." },
+        "decisionRecordId": { "type": "string", "pattern": "^drec:[a-z0-9][a-z0-9._/-]*$" },
+        "utterancesPreAdmitted": { "const": false, "description": "Trust earned over an engagement is a reason to widen the projection, never to bypass admission (RETAIN 6.5)." }
+      }
+    },
+    "coordinator": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "description": "A coordinator is a party, never infrastructure, and holds the union of what it coordinates (RETAIN 9.2).",
+      "properties": {
+        "isCoordinator": { "type": "boolean" },
+        "coordinates": { "type": "array", "items": { "type": "string" } },
+        "unionFloorClass": { "enum": ["C0", "C1", "C2", "C3", "C4"] }
+      }
+    },
+    "term": {
+      "type": "object",
+      "required": ["startsAt", "terminationConditions", "copyDispositionOnTermination"],
+      "additionalProperties": false,
+      "properties": {
+        "startsAt": { "type": "string", "format": "date-time" },
+        "endsAt": { "type": ["string", "null"], "format": "date-time" },
+        "terminationConditions": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "copyDispositionOnTermination": { "enum": ["expire-all", "expire-except-adopted"] }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "required": ["algorithm", "principalKeyId", "agentKeyId", "value"],
+      "additionalProperties": false,
+      "description": "Two signatures. The agent signs with its own key, which is what distinguishes a mandate from a directive.",
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "principalKeyId": { "type": "string" },
+        "agentKeyId": { "type": "string" },
+        "value": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/decision-request.schema.json",
+  "title": "DEFER Decision Request",
+  "description": "The proposal of an act requiring a decision. Classified by the brain before routing (DEFER 6.4).",
+  "type": "object",
+  "required": ["contractVersion", "requestId", "requestedBy", "act", "classification", "urgency", "state", "createdAt"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "defer-request/v1" },
+    "requestId": { "type": "string", "pattern": "^dreq:[a-z0-9][a-z0-9._/-]*$" },
+    "requestedBy": {
+      "type": "object",
+      "required": ["actor"],
+      "additionalProperties": false,
+      "properties": {
+        "actor": { "type": "string" },
+        "role": { "type": ["string", "null"], "pattern": "^role:[a-z0-9][a-z0-9._-]*$" }
+      }
+    },
+    "act": {
+      "type": "object",
+      "required": ["actClass", "target", "digest"],
+      "additionalProperties": false,
+      "properties": {
+        "actClass": { "type": "string" },
+        "target": { "type": "string", "description": "Path anchor, record id, boundary endpoint, or role id." },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$", "description": "Approval binds to these bytes. Any change voids the approval (DEFER 9.5)." },
+        "payloadRef": { "type": "string" },
+        "safeDefault": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "description": "Required when the class disposition is default-safe. MUST itself be covered by an envelope.",
+          "properties": { "actClass": { "type": "string" }, "target": { "type": "string" }, "digest": { "type": "string" } }
+        }
+      }
+    },
+    "classification": {
+      "type": "object",
+      "required": ["consequenceClass", "meterReadings", "classifiedBy", "classifierVersion"],
+      "additionalProperties": false,
+      "properties": {
+        "consequenceClass": {
+          "enum": ["K0", "K1", "K2", "K3", "K4"],
+          "description": "Assigned by the worst true statement, never the typical case (DEFER 6.1). Any boundary crossing is at minimum K3."
+        },
+        "meterReadings": {
+          "type": "object",
+          "required": ["currency", "records-affected", "reversibility", "exposure-delta", "authority-delta", "external-recipients"],
+          "additionalProperties": { "type": ["number", "string"] },
+          "properties": {
+            "currency": { "type": "number" },
+            "records-affected": { "type": "integer", "minimum": 0 },
+            "reversibility": { "enum": ["complete", "costly", "none"] },
+            "exposure-delta": { "type": "integer", "minimum": 0 },
+            "authority-delta": { "type": "integer", "minimum": 0, "description": "Nonzero reserves the decision to the owner (DEFER 4.6)." },
+            "external-recipients": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "classifiedBy": { "const": "brain", "description": "The classifier is part of the brain, never the proposer or the harness (DEFER 6.4)." },
+        "classifierVersion": { "type": "string" },
+        "proposerSuggestedClass": { "type": ["string", "null"] },
+        "divergence": { "type": ["string", "null"], "description": "Recorded where proposer and brain classifications differ." }
+      }
+    },
+    "polaris": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Refusal evaluations are observed evidence. Standards are rationale, never authority (POLARIS 9.4).",
+      "properties": {
+        "refusalsEvaluated": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["refusalId", "result"],
+            "additionalProperties": false,
+            "properties": {
+              "refusalId": { "type": "string", "pattern": "^refuse:[a-z0-9][a-z0-9._-]*$" },
+              "result": { "enum": ["pass", "refuse"] },
+              "evidenceGrade": { "const": "observed" }
+            }
+          }
+        },
+        "standardsCited": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["standardId", "reasoning"],
+            "additionalProperties": false,
+            "properties": {
+              "standardId": { "type": "string", "pattern": "^standard:[a-z0-9][a-z0-9._-]*$" },
+              "reasoning": { "type": "string" },
+              "role": { "const": "rationale" }
+            }
+          }
+        }
+      }
+    },
+    "urgency": {
+      "type": "object",
+      "required": ["level", "affectsAuthority"],
+      "additionalProperties": false,
+      "description": "Urgency routes waiting only. It MUST NOT widen an envelope or change a required approver (DEFER 7.3).",
+      "properties": {
+        "level": { "enum": ["low", "high"] },
+        "assertedBy": { "type": "string" },
+        "affectsAuthority": { "const": false }
+      }
+    },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "routedTo": { "type": "string", "pattern": "^role:[a-z0-9][a-z0-9._-]*$" },
+        "selectionRule": { "const": "least-authorized-covering", "description": "DEFER 9.1. Never most senior." },
+        "coverageGap": { "type": "boolean", "default": false },
+        "candidates": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "timeout": {
+      "type": "object",
+      "required": ["window", "disposition"],
+      "additionalProperties": false,
+      "properties": {
+        "window": { "type": "string", "description": "ISO 8601 duration." },
+        "disposition": { "enum": ["lapse", "default-safe", "hold-open"], "description": "There are exactly three. A timeout MUST NOT resolve as approved (DEFER 10.1)." },
+        "expiresAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "raci": {
+      "type": "object",
+      "required": ["accountable", "responsible"],
+      "additionalProperties": false,
+      "properties": {
+        "accountable": { "type": "string", "pattern": "^role:[a-z0-9][a-z0-9._-]*$", "description": "Exactly one, and it MUST hold a covering envelope (DEFER 11.1)." },
+        "responsible": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "consulted": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["party", "responseWindow"],
+            "additionalProperties": false,
+            "properties": {
+              "party": { "type": "string" },
+              "responseWindow": { "type": "string" },
+              "response": { "type": ["string", "null"] },
+              "nonResponsive": { "type": "boolean", "default": false, "description": "Recorded and the decision proceeds. Consultation MUST NOT become a veto (DEFER 11.3)." }
+            }
+          }
+        },
+        "informed": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "state": { "enum": ["proposed", "classified", "routed", "pending", "resolved", "executed"] },
+    "createdAt": { "type": "string", "format": "date-time" }
+  }
+}

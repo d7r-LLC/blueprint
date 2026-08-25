@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/inference-authorization.schema.json",
+  "title": "CONFIDE Inference Authorization",
+  "description": "A unilateral owner grant permitting one actor to send bounded records to bounded providers for bounded purposes.",
+  "type": "object",
+  "required": ["contractVersion", "authorizationId", "actor", "providerIds", "purposes",
+               "maxCustodyClass", "maxSensitivity", "scopes", "createdAt", "expiresAt", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "confide-authorization/v1" },
+    "authorizationId": { "type": "string", "pattern": "^infauth:[a-z0-9][a-z0-9._/-]*$" },
+    "actor": {
+      "type": "string",
+      "description": "Exactly one Blueprint Layer 7 actor identity. An actor with no authorization cannot perform inference."
+    },
+    "providerIds": {
+      "type": "array", "minItems": 1,
+      "items": { "type": "string", "pattern": "^infer:[a-z0-9][a-z0-9._-]*$" }
+    },
+    "purposes": {
+      "type": "array", "minItems": 1,
+      "items": { "enum": ["summarize", "classify", "extract", "draft", "translate", "embed", "critique", "rerank", "transcribe"] },
+      "description": "No catch all purpose is permitted."
+    },
+    "maxCustodyClass": { "enum": ["C0", "C1", "C2", "C3", "C4"] },
+    "maxSensitivity": { "enum": ["none", "personal", "third-party", "confidential"] },
+    "scopes": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "redaction": {
+      "type": "object",
+      "properties": {
+        "required": { "type": "boolean" },
+        "profile": { "type": ["string", "null"] }
+      }
+    },
+    "denyKeys": { "type": "array", "items": { "type": "string" } },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "callsPerHour": { "type": "integer", "minimum": 1 },
+        "maxPayloadBytes": { "type": "integer", "minimum": 1 },
+        "maxRecordsPerCall": { "type": "integer", "minimum": 1 },
+        "maxLoopTurns": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "transcriptRetention": {
+      "type": "object",
+      "description": "Off by default. When enabled, transcripts go to a separate surface and never into the ledger.",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "surface": { "type": ["string", "null"] },
+        "sensitivity": { "enum": ["none", "personal", "third-party", "confidential"] },
+        "retainFor": { "type": ["string", "null"] }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "revokedAt": { "type": ["string", "null"], "format": "date-time" },
+    "signature": {
+      "type": "object",
+      "required": ["actor", "keyId", "alg", "sig"],
+      "properties": {
+        "actor": { "type": "string", "description": "The owner. An agent identity must never appear here." },
+        "keyId": { "type": "string" },
+        "alg": { "enum": ["ed25519", "eip191"] },
+        "sig": { "type": "string" }
+      }
+    }
+  }
+}

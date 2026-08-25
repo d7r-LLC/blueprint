@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/polaris-declaration.schema.json",
+  "title": "POLARIS Declaration",
+  "description": "The root of the precedence order. Elements may forbid; no element may permit, relax, or satisfy a requirement of any other specification in the stack (POLARIS 8.1).",
+  "type": "object",
+  "required": ["contractVersion", "declarationId", "purpose", "refusals", "loyaltyOrder", "adoptedAt", "signature"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "polaris-declaration/v1" },
+    "declarationId": { "type": "string", "pattern": "^polaris:[a-z0-9][a-z0-9._-]*$" },
+    "precedence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mayForbid": { "const": true },
+        "mayPermit": { "const": false, "description": "Absolute. Mission as justification for exception is the failure this closes (POLARIS 8.2)." }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "required": ["normative"],
+      "additionalProperties": false,
+      "properties": {
+        "statement": { "type": "string" },
+        "isNot": { "type": "array", "items": { "type": "string" }, "description": "Negative identity is more informative than positive identity (POLARIS 3.2)." },
+        "normative": { "const": false }
+      }
+    },
+    "purpose": {
+      "type": "object",
+      "required": ["statement", "usedFor"],
+      "additionalProperties": false,
+      "description": "Exactly one statement. A list of purposes cannot break a tie with itself (POLARIS 3.1).",
+      "properties": {
+        "statement": { "type": "string", "minLength": 1 },
+        "usedFor": {
+          "type": "array",
+          "items": { "enum": ["amendment-test", "last-resort-tiebreak", "refusal-interpretation"] },
+          "description": "The closed set of legitimate uses (POLARIS 3.3)."
+        },
+        "mayPermit": { "const": false }
+      }
+    },
+    "refusals": {
+      "type": "array", "minItems": 1,
+      "description": "The load bearing layer. A brain declaring none has written a poster (POLARIS 4.1).",
+      "items": {
+        "type": "object",
+        "required": ["refusalId", "plainForm", "predicate", "evaluatedAt", "strength", "cause", "normative", "adoptedAt", "testInterval"],
+        "additionalProperties": false,
+        "properties": {
+          "refusalId": { "type": "string", "pattern": "^refuse:[a-z0-9][a-z0-9._-]*$" },
+          "plainForm": { "type": "string", "description": "What survives. Read by a human deciding whether the predicate still expresses the intent." },
+          "predicate": {
+            "type": "object",
+            "required": ["expression", "requiresInference"],
+            "additionalProperties": false,
+            "properties": {
+              "expression": { "type": "string", "description": "Decidable without judgement, evaluable by the brain." },
+              "requiresInference": {
+                "const": false,
+                "description": "Absolute. A refusal a model evaluates is a refusal the model owns (POLARIS 4.3)."
+              }
+            }
+          },
+          "evaluatedAt": {
+            "type": "array", "minItems": 1,
+            "items": { "enum": ["admission", "speak-utterance", "confide-call", "trace-egress", "defer-decision"] },
+            "description": "The five existing gates. POLARIS adds no new enforcement point (POLARIS 9.1)."
+          },
+          "strength": { "enum": ["absolute", "conditional"] },
+          "conditions": { "type": "array", "items": { "type": "string" }, "description": "Required and decidable when strength is conditional." },
+          "cause": { "type": "string", "description": "What this exists to prevent." },
+          "normative": { "const": true },
+          "travelsAsFloor": { "type": "boolean", "default": true, "description": "Attaches to emitted records so a boundary cannot launder the value (POLARIS 12.1)." },
+          "testInterval": { "type": "string", "description": "ISO 8601 duration. An untested refusal is unfalsified, not proven (POLARIS 4.5)." },
+          "lastTestedAt": { "type": ["string", "null"], "format": "date-time" },
+          "lastTestResult": { "enum": ["pass", "fail", "never-run"] },
+          "adoptedAt": { "type": "string", "format": "date-time" },
+          "withdrawnAt": { "type": ["string", "null"], "format": "date-time", "description": "Withdrawn, never removed. The history of what a brain stopped refusing is the record of its character (POLARIS 11.4)." },
+          "withdrawnCause": { "type": ["string", "null"] },
+          "coolingPeriod": { "type": "string", "description": "No amendment inside this interval after a refusal fired (POLARIS 11.2)." }
+        }
+      }
+    },
+    "obligations": {
+      "type": "array",
+      "description": "Enforced by measurement over a window, never by blocking (POLARIS 5.2). Where a value can be either kind, make it a refusal.",
+      "items": {
+        "type": "object",
+        "required": ["obligationId", "statement", "metric", "window", "threshold", "normative"],
+        "additionalProperties": false,
+        "properties": {
+          "obligationId": { "type": "string", "pattern": "^oblige:[a-z0-9][a-z0-9._-]*$" },
+          "statement": { "type": "string" },
+          "metric": { "type": "string", "description": "Computable from the brain's own records." },
+          "window": { "type": "string" },
+          "threshold": { "type": "number" },
+          "attestedBy": { "const": "brain", "description": "Never by the party responsible for meeting it (POLARIS 5.3)." },
+          "normative": { "const": true }
+        }
+      }
+    },
+    "loyaltyOrder": {
+      "type": "array", "minItems": 2,
+      "description": "Total and ordered. A tie is an undeclared order. Not reorderable per decision, by anyone (POLARIS 6.2).",
+      "items": {
+        "type": "object",
+        "required": ["rank", "beneficiary"],
+        "additionalProperties": false,
+        "properties": {
+          "rank": { "type": "integer", "minimum": 1 },
+          "beneficiary": { "type": "string", "examples": ["owner", "employees", "clients", "peers-under-agreement", "record-subjects", "general-public"] },
+          "note": { "type": "string" }
+        }
+      }
+    },
+    "loyaltyPublication": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publishedToPeers": { "const": true, "description": "Required. A peer who knows where they sit can decide what to share (POLARIS 6.3)." },
+        "publishedPublicly": { "type": "boolean" }
+      }
+    },
+    "conflictRules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["conflict", "disqualifies"],
+        "additionalProperties": false,
+        "properties": {
+          "conflict": { "type": "string" },
+          "disqualifies": { "type": "boolean", "description": "Disclosure without disqualification is not a control (POLARIS 6.4)." }
+        }
+      }
+    },
+    "standards": {
+      "type": "array",
+      "description": "Tie breaks among already permitted options. Never a refusal, never a permission (POLARIS 7.1).",
+      "items": {
+        "type": "object",
+        "required": ["standardId", "statement", "normative", "role"],
+        "additionalProperties": false,
+        "properties": {
+          "standardId": { "type": "string", "pattern": "^standard:[a-z0-9][a-z0-9._-]*$" },
+          "statement": { "type": "string" },
+          "normative": { "const": true },
+          "role": { "const": "tiebreak-among-permitted" },
+          "citationCount": { "type": "integer", "minimum": 0, "description": "Cited nearly always, or never, is a defect either way (POLARIS 7.2)." }
+        }
+      }
+    },
+    "mottos": {
+      "type": "array",
+      "description": "Kept because compression aids recall. Never grounds for a decision (POLARIS 7.3).",
+      "items": {
+        "type": "object",
+        "required": ["phrase", "normative"],
+        "additionalProperties": false,
+        "properties": {
+          "phrase": { "type": "string" },
+          "compresses": { "type": ["string", "null"], "description": "The normative element id this stands for. Null means it is a slogan, which is permitted." },
+          "normative": { "const": false },
+          "citableAsGrounds": { "const": false }
+        }
+      }
+    },
+    "precedents": {
+      "type": "array",
+      "description": "Purpose level tensions resolved by the owner. A citable memory, and a queue of pending amendments (POLARIS 10.2).",
+      "items": {
+        "type": "object",
+        "required": ["precedentId", "elementsInTension", "resolution", "resolvedBy", "resolvedAt"],
+        "additionalProperties": false,
+        "properties": {
+          "precedentId": { "type": "string" },
+          "act": { "type": "string" },
+          "elementsInTension": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+          "resolution": { "type": "string" },
+          "reasoning": { "type": "string" },
+          "resolvedBy": { "type": "object", "additionalProperties": false, "properties": { "actor": { "type": "string" }, "identityKind": { "const": "human" } } },
+          "resolvedAt": { "type": "string", "format": "date-time" },
+          "mayPermit": { "const": false, "description": "Precedent is subject to the one way rule exactly as purpose is (POLARIS 10.3)." }
+        }
+      }
+    },
+    "amendments": {
+      "type": "array",
+      "description": "Append only. K4 under DEFER, owner only, never delegable (POLARIS 11.1).",
+      "items": {
+        "type": "object",
+        "required": ["amendmentId", "elementId", "change", "statedCause", "purposeConsistency", "resolvedBy", "resolvedAt", "coolingPeriodRespected"],
+        "additionalProperties": false,
+        "properties": {
+          "amendmentId": { "type": "string" },
+          "elementId": { "type": "string" },
+          "change": { "enum": ["added", "narrowed", "widened", "withdrawn", "downgraded-to-conditional", "loyalty-reordered", "threshold-lowered"] },
+          "statedCause": { "type": "string", "description": "An amendment that cannot articulate its cause is drift with a signature on it (POLARIS 11.3)." },
+          "promptingAct": { "type": ["string", "null"] },
+          "purposeConsistency": { "type": "string" },
+          "resolvedBy": { "type": "object", "additionalProperties": false, "properties": { "actor": { "type": "string" }, "identityKind": { "const": "human" } } },
+          "resolvedAt": { "type": "string", "format": "date-time" },
+          "coolingPeriodRespected": { "const": true }
+        }
+      }
+    },
+    "adoptedAt": { "type": "string", "format": "date-time" },
+    "signature": {
+      "type": "object",
+      "required": ["algorithm", "keyId", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "keyId": { "type": "string" },
+        "value": { "type": "string" }
+      }
+    }
+  }
+}

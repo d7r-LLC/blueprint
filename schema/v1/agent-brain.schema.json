@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/agent-brain.schema.json",
+  "title": "RETAIN Agent State Store",
+  "description": "The threshold classification of a persistent agent state store. Every persistent store is exactly one of residue, domain, or brain (RETAIN 2.1).",
+  "type": "object",
+  "required": ["contractVersion", "storeId", "threshold", "persistsAcrossEngagement", "keyHolder", "classifiedAt"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "retain-store/v1" },
+    "storeId": { "type": "string", "pattern": "^store:[a-z0-9][a-z0-9._/-]*$" },
+    "heldBy": { "type": "string", "description": "The agent identity whose state this is. Exactly one; two agents MUST NOT share a brain (RETAIN 4.1)." },
+    "threshold": {
+      "enum": ["residue", "domain", "brain"],
+      "description": "Residue is governed by TRACE. A domain is the principal's Layer 2 topology. A brain is a party."
+    },
+    "persistsAcrossEngagement": {
+      "type": "boolean",
+      "description": "False forces threshold residue. A store discarded at engagement end MUST NOT be classified as a domain or a brain (RETAIN 2.2)."
+    },
+    "keyHolder": {
+      "type": "object",
+      "required": ["party", "isSelf"],
+      "additionalProperties": false,
+      "description": "The operative test. A store whose key is held by another party is a domain of that party, whatever it is called (RETAIN 2.4).",
+      "properties": {
+        "party": { "type": "string" },
+        "isSelf": { "type": "boolean", "description": "False is incompatible with threshold brain. A brain the parent can sign for is a folder with aspirations." },
+        "keyId": { "type": ["string", "null"] }
+      }
+    },
+    "placement": {
+      "type": "object",
+      "required": ["location", "custodyClass", "privacyBasis"],
+      "additionalProperties": false,
+      "description": "A declared property per store, not a system wide design choice. Undeclared placement is C4 (RETAIN 5.1).",
+      "properties": {
+        "location": { "enum": ["principal-records", "principal-host-separate-root", "principal-infrastructure-separate-host", "agent-owner-infrastructure", "vendor-hosted"] },
+        "custodyClass": { "enum": ["domain", "C0", "C1", "C2", "C3", "C4"] },
+        "privacyBasis": {
+          "enum": ["none", "policy", "policy-enforced", "construction"],
+          "description": "Inspectability and ownership trade against each other. Claiming construction while operating as policy is RT-13."
+        }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "retainsByConstruction": { "const": true, "description": "An agent that learns retains. A no retention classification is RT-12 (RETAIN 5.4)." },
+        "noRetentionEligible": { "const": false }
+      }
+    },
+    "polaris": {
+      "type": "object",
+      "required": ["hasOwnDeclaration"],
+      "additionalProperties": false,
+      "properties": {
+        "hasOwnDeclaration": { "type": "boolean", "description": "MUST be true for a brain and false for a domain. A domain inherits the principal's entirely (RETAIN 4.3)." },
+        "declarationId": { "type": ["string", "null"], "pattern": "^polaris:[a-z0-9][a-z0-9._-]*$" },
+        "charterArtifactClass": { "enum": ["A0", null], "description": "A domain's behavioral rules are directive artifacts under TRACE, not a values document." },
+        "amendableByPrincipal": { "type": "boolean", "description": "True only for a domain. A principal amending a brain's POLARIS is RT-07." }
+      }
+    },
+    "capacities": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The three capacities that constitute an agent's ownership. All three or none; partial holdings resolve by the key holding test (RETAIN 4.2).",
+      "properties": {
+        "mayRefuse": { "type": "boolean" },
+        "mayWithholdDisclosure": { "type": "boolean" },
+        "mayPersist": { "type": "boolean" }
+      }
+    },
+    "sharedStores": {
+      "type": "array",
+      "description": "Legal among domains, forbidden between brains. Each entry is a promotion blocker (RETAIN 3.4).",
+      "items": {
+        "type": "object",
+        "required": ["sharedStoreId", "participants", "blocksPromotion"],
+        "additionalProperties": false,
+        "properties": {
+          "sharedStoreId": { "type": "string" },
+          "participants": { "type": "array", "minItems": 2, "items": { "type": "string" } },
+          "blocksPromotion": { "const": true },
+          "dissolutionPlan": { "type": ["string", "null"], "description": "How shared state becomes pairwise utterances with receipts." }
+        }
+      }
+    },
+    "creation": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "description": "Required for threshold brain. Creation is owner only and never delegable (RETAIN 10.1).",
+      "properties": {
+        "createdBy": { "type": "object", "additionalProperties": false, "properties": { "actor": { "type": "string" }, "identityKind": { "const": "human" } } },
+        "consequenceClass": { "enum": ["K3", "K4"], "description": "K4 where the new brain or its owner is to hold an envelope in the creating brain." },
+        "decisionRecordId": { "type": "string", "pattern": "^drec:[a-z0-9][a-z0-9._/-]*$" },
+        "promotedFrom": { "enum": ["residue", "domain", null] }
+      }
+    },
+    "disposition": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "description": "Declared at creation, before any party has an interest in the answer (RETAIN 10.3).",
+      "properties": {
+        "onOwnerRetirement": { "enum": ["sealed-to-named-party", "destroyed-with-manifest", "transferred-to-named-party"] },
+        "namedParty": { "type": ["string", "null"] },
+        "declaredAt": { "type": "string", "format": "date-time" },
+        "orphaned": { "type": "boolean", "default": false, "description": "An orphan holds records and no party holds its refusal. Unreported is RT-38." }
+      }
+    },
+    "classifiedAt": { "type": "string", "format": "date-time" }
+  }
+}
