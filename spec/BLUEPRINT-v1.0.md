@@ -168,6 +168,19 @@ One brain, three boundaries, one authority model, one reason.
 
 RETAIN is the only companion that spans two layers, because the question it answers is not a boundary question or an authority question but the point at which the two meet. An agent that accumulates state is either part of this brain or a party to it, and which one it is determines both what may cross to it and what it may decide.
 
+Each companion is a name first and an expansion second. The expansions are pinned here, once, and this table is the only place in this repository where they are canonical. Where any other text, including a non normative note under `design/`, expands one of these names differently, that text is stale and this table governs.
+
+| Name | Expands to |
+|---|---|
+| POLARIS | Purpose, Obligations, Loyalties, Alignment, Refusals, Identity, Standards |
+| DEFER | Delegated Envelopes, Fiduciary duty, Escalation, and Records |
+| SPEAK | Signed Provenance Exchange for Attributable Knowledge |
+| CONFIDE | Controlled Inference and Disclosure Governance |
+| TRACE | Tooling Residue, Artifact Custody, and Evidence |
+| RETAIN | Retention, Engagement, Thresholds, Admission, Identity, and Non-nesting |
+
+The expansions are non normative. Each specification is identified by its name and version, never by its expansion, so no conformance result turns on the words in this table and no requirement may be derived from them. They are kept because a name whose expansion is remembered differently by every reader has stopped being one name.
+
 ### 1.1.2 Precedence
 
 Precedence in this stack is asymmetric, and the asymmetry is normative.
