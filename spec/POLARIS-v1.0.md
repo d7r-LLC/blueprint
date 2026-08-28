@@ -9,7 +9,7 @@
 **Repository:** `<repo>/blueprint`
 **Schema:** `schema/v1/`
 **License:** Apache 2.0
-**Requires:** BLUEPRINT/1.0, DEFER/1.0, CONFIDE/1.0, TRACE/1.0, for vocabulary. References to SPEAK/1.0 are informative until that specification locks. Precedence position is not dependency: POLARIS remains the root of the precedence order (section 8).
+**Requires:** BLUEPRINT/1.0, DEFER/1.0, CONFIDE/1.0, TRACE/1.0, RETAIN/1.0, for vocabulary. References to SPEAK/1.0 are informative until that specification locks. Precedence position is not dependency: POLARIS remains the root of the precedence order (section 8).
 
 ---
 
@@ -102,6 +102,7 @@ Three requirements are absolute and admit no configuration. A POLARIS element MU
     15.3 Self test
     15.4 Note on order of evaluation
 16. Versioning and Governance
+Appendix A: Refusal and Scope Predicate Grammar (proposed)
 
 ---
 
@@ -135,7 +136,7 @@ This single test is the whole design. It does not make a brain more ethical. It 
 
 POLARIS is the root of the precedence order. It is the normative content of Layer 0, above the Charter's structural declarations, and it is the first document a brain writes and the last one it is permitted to change casually.
 
-Root is a statement about conflict resolution, not about dependency. POLARIS imports vocabulary it does not redefine: decidability and act classes from DEFER, evidence grades from TRACE, custody classes from CONFIDE, layers and tiers from BLUEPRINT. Requiring a document's vocabulary confers no precedence on that document, and sitting at the top of the precedence order removes none of the requirement.
+Root is a statement about conflict resolution, not about dependency. POLARIS imports vocabulary it does not redefine: decidability and act classes from DEFER, evidence grades from TRACE, custody classes from CONFIDE, layers and tiers from BLUEPRINT, agent state thresholds and the key holding test from RETAIN. Requiring a document's vocabulary confers no precedence on that document, and sitting at the top of the precedence order removes none of the requirement.
 
 Precedence here means one specific thing, defined in section 8, and it is narrower than it sounds. POLARIS wins every conflict in the direction of refusing, and loses every conflict in the direction of permitting.
 
@@ -641,3 +642,51 @@ Semantic versioning applies. MAJOR when a conformant implementation of the previ
 The element kinds are closed. A brain MUST NOT add an eighth element kind, because each existing kind is defined by what it may and may not do, and a new kind would arrive without those limits, which is how a permission gets into the top of the stack.
 
 Substantive changes proceed by RFC with a 30 day comment period. MAJOR changes require a two thirds supermajority of listed authors. While Status is Draft, this section is governed by the Draft status clause of BLUEPRINT/1.0 section 14.
+
+---
+
+## Appendix A: Refusal and Scope Predicate Grammar (proposed)
+
+This appendix is proposed, not adopted. [spec_basis: proposed. No existing text defined a predicate surface form; this grammar is new and enters the Draft docket to RFCs loop of BLUEPRINT/1.0 section 14, where implementation experience under the reference tooling decides its adoption, revision, or replacement.] Nothing in it relaxes any body requirement, and a brain MAY declare predicates in another decidable form until an adopted grammar binds.
+
+The grammar exists so that the `predicate.expression` string of the declaration schema, and the scope predicates DEFER/1.0 section 4.3 requires, have one parseable form: enough for the Phase 0 declaration check to parse a predicate at adoption time and for the Tier 1 checkpoints of section 15.1 to evaluate one at record admission and on every conformance check run.
+
+### A.1 Design constraints
+
+Four constraints are load bearing, and any amendment to this grammar MUST preserve them.
+
+1. **Decidable.** Evaluation terminates on every input, in time linear in the length of the expression plus the length of the values it inspects. There is no recursion into data, no loop, and no unbounded search.
+2. **No inference.** The language contains no construct that invokes a language model, so `requiresInference` is false by construction for every expression this grammar admits (section 4.3).
+3. **No regex.** The only substring operation is literal prefix. Matching is a character by character scan and never backtracks.
+4. **Fail closed.** An operand that cannot be resolved at the evaluating gate drives the predicate to the outcome that confers less: a refusal predicate evaluates to refuse, a scope predicate evaluates to not covered (DEFER/1.0 section 4.3).
+
+### A.2 Productions
+
+Twelve productions in EBNF. Terminals are quoted, `{ }` is repetition, `|` is alternation. Keywords are lowercase and reserved.
+
+| # | Production | Definition | Example |
+|---|---|---|---|
+| 1 | `predicate` | `expr` | `act.class = "publish"` |
+| 2 | `expr` | `term { "or" term }` | `record.sensitivity >= "confidential" or record.type = "credential"` |
+| 3 | `term` | `factor { "and" factor }` | `act.class = "emit" and record.consentToRecord absent` |
+| 4 | `factor` | `"not" factor \| "(" expr ")" \| test` | `not (record.stage = "capture")` |
+| 5 | `test` | `comparison \| presence` | `record.authorship = "agent"` |
+| 6 | `comparison` | `field op literal` | `act.meter.currency > 100` |
+| 7 | `presence` | `field "present" \| field "absent"` | `record.custodyFloor present` |
+| 8 | `field` | `name { "." name }` | `record.type` |
+| 9 | `op` | `"=" \| "!=" \| "<" \| "<=" \| ">" \| ">=" \| "^=" \| "in"` | `act.target.path ^= "brain-root/System/"` |
+| 10 | `literal` | `string \| number \| list` | `"confidential"` |
+| 11 | `list` | `"[" literal { "," literal } "]"` | `record.type in ["decision", "charter"]` |
+| 12 | `string`, `number`, `name` | `string` is double quoted UTF-8 with `\"` and `\\` as the only escapes; `number` is a decimal integer or fraction; `name` is `[a-z][a-zA-Z0-9_-]*` | `"C3"`, `250.00`, `sensitivity` |
+
+`and` binds tighter than `or`, `not` binds tightest, and parentheses group. A string an implementation cannot parse under these productions is not a predicate in this grammar, and a declaration check MUST report it rather than guess.
+
+### A.3 Evaluation context and semantics
+
+Names resolve against a context the evaluating gate assembles. The `record` namespace binds the frontmatter of the record under evaluation (BLUEPRINT/1.0 section 5.1). The `act` namespace binds the act under classification: its act class at `act.class`, its anchor relative target path at `act.target.path`, its meter readings under `act.meter`. At the admission checkpoint of section 15.1 the `record` namespace is always bound; the `act` namespace is bound at the DEFER decision gate and the crossing gates. A name in a namespace the evaluating gate does not bind is unresolvable, and constraint A.1.4 applies.
+
+`=`, `!=`, and `in` compare values by equality. The order operators compare numbers numerically, and compare values of a property whose declared vocabulary is ordered, such as sensitivity classes, custody classes, and consequence classes, by position in the declared vocabulary registry (BLUEPRINT/1.0 section 5.2). An order comparison over values with no declared order is unresolvable, not false. `^=` compares an anchor relative path literal against the field's value character by character, per the path anchors of BLUEPRINT/1.0 section 3.4, which DEFER/1.0 section 4.3 already requires of every scope.
+
+### A.4 What the grammar omits, and why
+
+There are no regular expressions, no arithmetic, no string concatenation, no user defined functions, no access to anything outside the evaluation context, and no construct that performs input or output. Each omission removes a way for evaluation to become slow, undecidable, or dependent on state the auditor cannot reproduce. A value that cannot be expressed in this grammar is handled per section 4.3: narrowed to its mechanically detectable part, or declared as a standard under section 7.

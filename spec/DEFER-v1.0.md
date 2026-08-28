@@ -9,7 +9,7 @@
 **Repository:** `<repo>/blueprint`
 **Schema:** `schema/v1/`
 **License:** Apache 2.0
-**Requires:** BLUEPRINT/1.0 Tier 1
+**Requires:** BLUEPRINT/1.0 Tier 1, TRACE/1.0 (evidence grades, protected artifact)
 
 ---
 
@@ -605,12 +605,14 @@ Each decision record is a Layer 6 ledger entry in the decision family, hash chai
 - the request identifier and the digest of the act as proposed
 - the consequence class, every meter reading, and the classifier version
 - the divergence, if any, between proposed and computed classification
-- the envelope invoked and the ordered digests of every grant on its chain, including the human root
+- where an envelope was invoked, the envelope and the ordered digests of every grant on its chain, including the human root
 - the resolving actor and role, and each member's resolution where a quorum applied
 - the RACI assignment, with consultation results or recorded non responses
 - the urgency input, the timeout window, and the disposition declared
 - the outcome, and the execution event with its digest, or the documented reason for non execution
 - the evidence grade of every claim in the record
+
+A decision the owner resolves directly, under no delegated envelope, is an **owner direct** record. Its resolving actor is the owner, its envelope and grant chain fields are absent rather than empty, and the human root is inherent: the owner's signature on the record is the human signature the chain requirement exists to reach. A Tier 1 brain that has issued no grant writes owner direct records exclusively, and this is the expected shape of its entire decision family. An owner direct record MUST NOT carry a fabricated self grant from the owner to the owner to satisfy the envelope fields, because a grant conferring authority its grantor already holds records nothing and manufactures a chain where none exists. A record that omits the envelope fields and is not resolved by the owner's human signature is not owner direct; it is DF-02.
 
 ### 12.2 Two sided reconciliation
 
@@ -696,7 +698,7 @@ This is deliberately inconvenient, and the inconvenience is the point. The momen
 | `DF-28` | Decision record does not pin grant digests, so revocation rewrote history |
 | `DF-29` | Envelope conferred by an agent definition rather than by a grant |
 | `DF-30` | Grant chain crossing a brain boundary |
-| `DF-31` | Attested meter reading used as sole evidence |
+| `DF-31` | Attested meter reading used as sole evidence, outside the Tier 1 owner attestation carve-out of 12.4 |
 | `DF-32` | Owner load exceeded its declared budget without a governance defect raised |
 
 ---
@@ -789,4 +791,4 @@ Semantic versioning applies. MAJOR when a conformant implementation of the previ
 
 The act class vocabulary, the meter set, and the consequence classes are extension points. A brain MAY add act classes and meters. A brain MUST NOT remove a required one, MUST NOT add a sixth consequence class, and MUST NOT add a fourth timeout disposition.
 
-Substantive changes proceed by RFC with a 30 day comment period. MAJOR changes require a two thirds supermajority of listed authors.
+Substantive changes proceed by RFC with a 30 day comment period. MAJOR changes require a two thirds supermajority of listed authors. While Status is Draft, this section is governed by the Draft status clause of BLUEPRINT/1.0 section 14.

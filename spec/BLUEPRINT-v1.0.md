@@ -271,6 +271,8 @@ The Charter MUST declare the brain's public signing keys: for each key an identi
 
 A signature that verifies only against a key absent from the Charter, or present with status `revoked`, MUST be treated as no signature. A `retired` key verifies signatures made before its retirement and MUST NOT make new ones. Verification that cannot determine a key's status fails closed.
 
+**Signature input bytes.** The input to a Charter or POLARIS declaration signature is defined canonically. The signature MUST be computed over the artifact's exact stored UTF-8 bytes with one exclusion: the value of the field that carries the signature string (`signature.sig` in the Charter schema, `signature.value` in the POLARIS declaration schema) is replaced by the empty string before signing, the field itself remaining present, and every other byte, whitespace, key order, and line endings included, is signed exactly as stored. Verification MUST recompute the same byte sequence under the same exclusion and verify it against a Charter key under the status rules above. No other canonicalization is applied, no reformatting, no key sorting, no whitespace normalization, so two artifacts that differ in any byte outside the excluded value are different signed artifacts. A signature that verifies only under some other transformation of the bytes MUST be treated as no signature. [spec_basis: proposed. No existing clause defined the signed byte sequence; the exclusion rule stated here is new text and enters the Draft docket to RFCs loop of section 14.]
+
 The owner holds the private keys. A brain whose signing key is held by another party is a domain of that party and MUST NOT be described as a brain (RETAIN/1.0, Conformance clause).
 
 ### 2.4 Lineage and chain of title
@@ -427,7 +429,7 @@ Layer 5 binds at Tier 2 (12.2). Body deferred; its requirements bind via the sec
 
 ## 8. Layer 6: Ledger
 
-Layer 6 answers what happened, in a form that cannot be quietly rewritten. Its internal families bind at Tier 1, its tooling families at Tier 2, and its boundary families at Tier 3 (8.1, 12.1).
+Layer 6 answers what happened, in a form that cannot be quietly rewritten. Its internal families bind at Tier 1, except the tooling families among them, which bind at Tier 2, and its boundary families bind at Tier 3 (8.1, 12.1).
 
 ### 8.1 Log families
 
@@ -458,7 +460,7 @@ Ledger entries MUST be minted coordination free: timestamp plus entropy or equiv
 
 An entry MAY carry the digest of the previous entry in its family. A family so chained is tamper evident end to end: rewriting any entry breaks every link after it.
 
-Chaining is REQUIRED for every boundary family and for any family whose chain head a peer attests to, because a peer's attestation is only as good as the chain beneath it (SPEAK/1.0 section 11). For internal families chaining is RECOMMENDED and is not required at Tier 1: within one brain, the append only rule, version control history, and DEFER/1.0's two sided reconciliation provide the tamper evidence, and a Tier 1 brain has no peer to prove a chain to. A family that declares chaining MUST verify it, and a broken link fails the family (8.2).
+Chaining is REQUIRED for every boundary family and for any family whose chain head a peer attests to, because a peer's attestation is only as good as the chain beneath it (SPEAK/1.0 section 11). Chaining is also REQUIRED at every tier, Tier 1 included, for the decision family and the inference call family: DEFER/1.0 section 12.1 defines every decision record as hash chained and signed, CONFIDE/1.0 section 8.4 requires the same of every call ledger entry, and this section adopts the more restrictive requirement so that the three documents agree. For the remaining internal families chaining is RECOMMENDED and is not required at Tier 1: within one brain, the append only rule, version control history, and DEFER/1.0's two sided reconciliation provide the tamper evidence, and a Tier 1 brain has no peer to prove a chain to. A family that declares chaining MUST verify it, and a broken link fails the family (8.2).
 
 ### 8.5 Trusted time
 
@@ -504,7 +506,7 @@ Each tier includes every requirement of the tier below it. A brain declares its 
 
 ### 12.1 Tier 1: Sovereign
 
-A Sovereign brain MUST implement Layers 0, 1, 2, and 3, and MUST implement the internal log families of Layer 6 (8.1).
+A Sovereign brain MUST implement Layers 0, 1, 2, and 3, and MUST implement the internal log families of Layer 6 other than the tooling families among them, which bind at Tier 2 (8.1).
 
 A Sovereign brain is owned, structured, and logged. It MUST NOT exchange knowledge with another brain: no utterance emitted, no record admitted. Exchange requires Layer 8 and binds at Tier 3, and an exchange performed by a brain claiming Tier 1 is an ungoverned crossing that voids the claim until the owner records the crossing and corrects the claim. Publishing a brain repository, or offering one as a template, is not knowledge exchange in the sense of SPEAK/1.0: nothing is admitted, no receiving brain signs, and no peer relationship is created. Exchange is admission: a signed artifact crossing under an agreement, admitted by a receiving brain that then owns its admitted copy (sections 10 and 16.3).
 
@@ -516,7 +518,7 @@ A Sovereign brain MUST satisfy POLARIS/1.0 section 15.1 for Tier 1. It MUST decl
 
 A Sovereign brain MUST satisfy DEFER/1.0 section 15.1 for Tier 1. It MUST declare its owner, define its roles, classify every act by consequence class before execution, and record every decision in the ledger. A Tier 1 brain is permitted to delegate nothing and may have the owner decide everything. What is not permitted is acting without a classified, recorded decision.
 
-A Sovereign brain MUST NOT contain another brain within its records, and MUST NOT delegate the creation of a brain. These two prohibitions bind at every tier: they are absolute requirements of RETAIN/1.0's Conformance clause, stated in RETAIN/1.0 sections 3 and 10.1, and they admit no tier scoping. RETAIN/1.0's tiered conformance begins at Tier 2 (RETAIN/1.0 section 13.1), so a Tier 1 brain has no other RETAIN obligations: agent state thresholds presuppose the enforced classification of Tier 2.
+A Sovereign brain MUST satisfy the RETAIN/1.0 Tier 1 posture of RETAIN/1.0 section 13.1. The four absolute requirements of RETAIN/1.0's Conformance clause bind in full: a Sovereign brain MUST NOT contain another brain within its records, MUST NOT permit a delegation grant chain to cross a brain boundary, MUST NOT describe as a brain any store whose signing key another party holds, because such a store is a domain of that party, and MUST NOT delegate the creation of a brain. A Sovereign brain MUST classify every agent state store as residue, domain, or brain, MUST record the classification, and MUST hold zero stores classified as brains; a store that cannot be classified fails closed as RETAIN/1.0 RT-03. Brain creation and agent brain admission are refused at Tier 1, because the obligations they trigger belong to Tier 2 and Tier 3. Full RETAIN/1.0 conformance begins at Tier 2 (RETAIN/1.0 section 13.1), because agent domains presuppose enforced classification and a ledger.
 
 ### 12.2 Tier 2: Governed
 
@@ -578,7 +580,7 @@ Fifteen phases: twelve numbered 0 through 11, plus three inserted phases. Phases
 | 10 | Operate | Self test green on two hosts, single owner state proven | 3 |
 | 11 | Federate | Key rotation and revocation exercised without data loss | 3 |
 
-Phase and tier interact by one rule: a phase's exit gate exercises the mechanics of the layers its tier includes, and nothing above them. Two apparent contradictions are resolved explicitly.
+Phase and tier interact by one rule: a phase's exit gate exercises the mechanics of the layers its tier includes, and nothing above them. Phase 9's own exit gate is performed under the Tier 3 candidate state of SPEAK/1.0 section 1.4: a Tier 2 brain that has scaffolded its boundary and holds a signed peer agreement MAY perform the conferring exchange, with every SPEAK/1.0 requirement binding during it, so the exchange Phase 9 requires is not forbidden to the brain that has not yet completed it. Two apparent contradictions are resolved explicitly.
 
 **The Phase 4 preservation gate at Tier 1.** Approval gates are Layer 4 mechanics and bind at Tier 2. The preservation gate is not one of them. It is the Layer 2 and Layer 3 structural property of sections 4.8 and 5.6: raw bytes held unmodified under a provenance record, verified by a check that recorded digest equals present bytes. A Tier 1 brain enforces preservation by that check, and the check failing blocks promotion of anything derived from the source. No approval routing, belief evaluation, or stage machinery is required at Tier 1.
 

@@ -2,10 +2,28 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://blueprint-spec.dev/schema/v1/decision-record.schema.json",
   "title": "DEFER Decision Record",
-  "description": "The append only Layer 6 ledger entry for a resolved decision. Must be verifiable after the fact without trusting current grant state (DEFER 12.3).",
+  "description": "The append only Layer 6 ledger entry for a resolved decision. Must be verifiable after the fact without trusting current grant state (DEFER 12.3). An owner direct record (DEFER 12.1) omits envelopeInvoked and grantChain; both are present whenever an envelope was invoked.",
   "type": "object",
   "required": ["contractVersion", "recordId", "requestId", "requestDigest", "consequenceClass", "meterReadings",
-               "envelopeInvoked", "grantChain", "resolution", "prevHash", "signature"],
+               "resolution", "prevHash", "signature"],
+  "dependentRequired": { "envelopeInvoked": ["grantChain"], "grantChain": ["envelopeInvoked"] },
+  "if": { "not": { "required": ["envelopeInvoked"] } },
+  "then": {
+    "$comment": "Owner direct record (DEFER 12.1): no envelope invoked and no grant chain. The resolver, where recorded, is a human, and the owner's signature on the record is the human root.",
+    "properties": {
+      "resolution": {
+        "properties": {
+          "resolvedBy": {
+            "if": { "type": "object" },
+            "then": {
+              "required": ["identityKind"],
+              "properties": { "identityKind": { "const": "human" } }
+            }
+          }
+        }
+      }
+    }
+  },
   "additionalProperties": false,
   "properties": {
     "contractVersion": { "const": "defer-decision/v1" },
@@ -19,7 +37,7 @@
     "envelopeInvoked": { "$ref": "https://blueprint-spec.dev/schema/v1/authority-envelope.schema.json" },
     "grantChain": {
       "type": "array", "minItems": 1,
-      "description": "Ordered from the invoked grant to the human root. Digests are pinned so later revocation cannot rewrite history (DEFER 8.4).",
+      "description": "Ordered from the invoked grant to the human root. Digests are pinned so later revocation cannot rewrite history (DEFER 8.4). Present exactly when an envelope was invoked; absent on an owner direct record (DEFER 12.1).",
       "items": {
         "type": "object",
         "required": ["grantId", "grantDigest", "identityKind"],
