@@ -40,8 +40,9 @@ Four requirements are absolute and admit no configuration. A delegation chain th
 1. Introduction
    1.1 The delegation problem
    1.2 Two graphs that are not the same graph
-   1.3 What the reference implementation gets right, and the two compressions
+   1.3 What the progenitor system gets right, and the two compressions
    1.4 Relationship to Blueprint layers
+   1.5 Fiduciary duty
 2. Definitions
    2.1 Owner, actor, role
    2.2 Authority envelope
@@ -71,6 +72,7 @@ Four requirements are absolute and admit no configuration. A delegation chain th
    6.3 The constitutional class
    6.4 Classification is prior to routing
    6.5 The unclassifiable act
+   6.6 Standing pre-classification
 7. Urgency and the Eisenhower Correction
    7.1 Why the matrix cannot be used as drawn
    7.2 Consequence routes authority, urgency routes waiting
@@ -139,9 +141,9 @@ These graphs have different shapes and they must be stored separately. A finance
 
 A brain MUST store the delegation chain independently of the reporting chain. A brain MAY use the reporting chain to compute a default notification set. A brain MUST NOT use the reporting chain to compute authority.
 
-### 1.3 What the reference implementation gets right, and the two compressions
+### 1.3 What the progenitor system gets right, and the two compressions
 
-The reference implementation already carries risk tiers keyed to act kinds, per tier approval strategies of automatic, agent, and human, a minimum approver seniority, an approver chain walked over the reporting hierarchy, an escalation timeout, a per agent daily proposal quota, a circuit breaker on consecutive failures, a quorum mode, and a pre tool use hook that writes a compliance audit log and can block a policy violating call. That is a real approval system and most of the mechanism DEFER requires already exists there in some form.
+The progenitor system, the FlowState approval machinery this document generalizes from and which predates the reference implementation, already carries risk tiers keyed to act kinds, per tier approval strategies of automatic, agent, and human, a minimum approver seniority, an approver chain walked over the reporting hierarchy, an escalation timeout, a per agent daily proposal quota, a circuit breaker on consecutive failures, a quorum mode, and a pre tool use hook that writes a compliance audit log and can block a policy violating call. That is a real approval system and most of the mechanism DEFER requires already exists there in some form.
 
 It compresses the problem twice, and both compressions are the reason DEFER exists.
 
@@ -158,6 +160,10 @@ DEFER is the normative body of Layer 7, Agency. It also constrains Layer 1, sinc
 Layer 1 holds the role definitions, the envelope definitions, and the owner load budget. Layer 4 gate approvals are decision requests and follow this document. Layer 6 carries the decision log family. Layer 8 boundary crossings are consequence classified by section 6.2. Layer 9 carries the reconciliation check and the health invariants.
 
 CONFIDE inference authorizations and TRACE directive artifacts are both envelope bearing instruments and MUST resolve to a role, not to a bare agent name. A charter naming an agent that holds no role holds no authority.
+
+### 1.5 Fiduciary duty
+
+The fiduciary duty of the title is a stance, not a separate mechanism. Every envelope holder decides on the owner's behalf, with the owner's authority, over the owner's assets, which is the classical fiduciary position, and the controls of this document are the mechanical form of the classical duties. The duty of loyalty is sections 4.6 and 9.3: a holder may not decide in its own favor or widen its own authority. The duty of care is section 6: a holder may not act without the consequence class of the act being known. The duty of candor is sections 6.4 and 12: divergences are recorded, readings are computed rather than accepted, and the ledger is written for a reader who trusts nothing. A holder that satisfies this document is discharging the duty; the word adds no obligation beyond the sections it names.
 
 ---
 
@@ -253,7 +259,7 @@ An envelope names one or more act classes. A brain MUST declare its act class vo
 | `grant` | Create, widen, or revoke a delegation grant |
 | `amend` | Change the Constitution, the Charter, or a role definition |
 
-The four levels of the reference change authority table map onto these directly. Mechanical is `apply-mechanical`. Structural and substantive are `apply-substantive` distinguished by scope and magnitude. Factual is `apply-substantive` with a verification condition.
+The four levels of the progenitor system's change authority table map onto these directly. Mechanical is `apply-mechanical`. Structural and substantive are `apply-substantive` distinguished by scope and magnitude. Factual is `apply-substantive` with a verification condition.
 
 ### 4.3 Scope
 
@@ -280,7 +286,7 @@ No envelope other than the owner's may contain:
 - `amend` over the Constitution, the Charter, or the role and envelope definitions
 - `grant` with an unbounded magnitude on the authority delta meter
 - `destroy` over a protected artifact as defined in TRACE section 9.1
-- any act whose authority delta meter reading is nonzero, meaning any act that changes who may decide
+- any act whose authority delta meter reading is nonzero, meaning any act that widens who may decide
 
 These are the constitutional reservations. They are the concrete form of the owner's final ownership, and they are the shortest list that achieves it. Reserving more than this pulls the owner back into the operating loop, which is the failure the system exists to prevent.
 
@@ -304,10 +310,12 @@ A brain MUST declare and compute at least the following.
 | `records-affected` | count | Counts targets, not bytes |
 | `reversibility` | enum | `complete`, `costly`, `none` |
 | `exposure-delta` | count | Records whose sensitivity or visibility loosens. One way |
-| `authority-delta` | count | Roles or envelopes whose authority changes. Nonzero reserves to the owner |
+| `authority-delta` | count | Roles or envelopes whose authority widens. Widenings only. Nonzero reserves to the owner |
 | `external-recipients` | count | Distinct boundary endpoints reached |
 
 A brain MAY declare additional meters. `exposure-delta` and `authority-delta` are the two that carry the most weight in practice, because they are the two whose effects cannot be undone by reversing the act. Restoring a sensitivity label does not unpublish, and revoking a grant does not un decide what was decided under it.
+
+`authority-delta` counts widenings only. A grant creation, an envelope widening, and a redelegation permission each read nonzero; a revocation, a narrowing, and a suspension read zero. This is why section 6.3 can hold narrowing and revocation at K2 and delegable while section 4.6 reserves every nonzero reading to the owner. The safe direction moves freely; the unsafe direction queues behind the owner.
 
 ### 5.3 Windowed aggregates and the refund fallacy
 
@@ -315,7 +323,7 @@ An envelope bounded only per act is not bounded. An agent authorized to approve 
 
 Every magnitude bound MUST therefore carry both a per act ceiling and at least one windowed aggregate ceiling, expressed per meter over a declared window. A brain MUST refuse an act whose execution would exceed either.
 
-An aggregate is computed over the delegation chain, not over the actor. Ten agents each holding a redelegation of the same grant share that grant's aggregate. Otherwise the aggregate is escaped by provisioning more agents, which an agent org can do trivially and which the reference implementation's per agent daily quota does not prevent.
+An aggregate is computed over the delegation chain, not over the actor. Ten agents each holding a redelegation of the same grant share that grant's aggregate. Otherwise the aggregate is escaped by provisioning more agents, which an agent org can do trivially and which the progenitor system's per agent daily quota does not prevent.
 
 ### 5.4 Declaring a meter
 
@@ -349,7 +357,7 @@ A K3 act MUST NOT be automatically resolved on the basis of magnitude alone. It 
 
 ### 6.3 The constitutional class
 
-K4 is reserved to the owner without exception. K4 covers amendment of the Constitution or Charter, creation or widening of any grant, change to a role's envelope set, change to the owner load budget, change to the act class vocabulary or meter declarations, and change to the timeout disposition of any class.
+K4 is reserved to the owner without exception. K4 covers amendment of the Constitution or Charter, creation or widening of any grant, widening of a role's envelope set, change to the owner load budget, change to the act class vocabulary or meter declarations, and change to the timeout disposition of any class.
 
 Narrowing and revocation are the asymmetry. Revoking a grant, narrowing an envelope, and suspending an actor are K2 rather than K4, and MAY be delegated. A governance system must be easier to tighten than to loosen, or its safe direction is the slow one.
 
@@ -357,15 +365,23 @@ Narrowing and revocation are the asymmetry. Revoking a grant, narrowing an envel
 
 A brain MUST classify before it routes, and MUST record the classification and every meter reading in the decision record. A classification produced after resolution is a rationalization.
 
-The classifier is part of the brain, not part of the agent harness and not part of the proposing actor. An actor MAY suggest a classification. The brain MUST compute its own and MUST use its own where they differ, and MUST record the divergence. A pattern of an actor understating classification is a signal worth having.
+The classifier is part of the brain, not part of the agent harness and not part of the proposing actor. Part of the brain is a statement about rule source, not about process boundary. A classifier MAY execute in tooling the brain invokes, including a command line tool, provided the classification rules it applies are brain records, its version is the one the decision record names, and the proposing actor cannot substitute its rules or its readings. Tooling that carries its own classification rules is part of the harness for this purpose, and its classifications are attested, not observed. An actor MAY suggest a classification. The brain MUST compute its own and MUST use its own where they differ, and MUST record the divergence. A pattern of an actor understating classification is a signal worth having.
 
 ### 6.5 The unclassifiable act
 
 An act the brain cannot classify MUST NOT execute and MUST NOT be routed to a default class.
 
-The reference implementation's fallback to the medium risk tier is a silent widening: an act nobody anticipated becomes an act an agent may authorize. The correct disposition of an unrecognized act is refusal plus a classification gap record. The gap is then closed by the owner as a K4 amendment to the vocabulary, which is exactly the right cost, because extending the set of things the system will do is a constitutional act.
+The progenitor system's fallback to the medium risk tier is a silent widening: an act nobody anticipated becomes an act an agent may authorize. The correct disposition of an unrecognized act is refusal plus a classification gap record. The gap is then closed by the owner as a K4 amendment to the vocabulary, which is exactly the right cost, because extending the set of things the system will do is a constitutional act.
 
 A nonzero unclassified act rate is a health invariant failure, not a runtime condition to be handled.
+
+### 6.6 Standing pre-classification
+
+An owner MAY adopt a standing decision record that pre-classifies a named family of routine acts at K0 or K1. The record names the family by act class and scope, using the decidable predicates of section 4.3, and states the class assigned. An act inside the family needs no per act decision record; the standing record is its classification and its recording, and the reconciliation of section 12.2 treats the family's acts as covered by it.
+
+The mechanism fails closed. A standing record MUST NOT assign a class above K1, MUST NOT cover an act class reserved by section 4.6, and MUST NOT cover a boundary crossing, which section 6.2 holds at K3 minimum. An act whose worst true statement exceeds the assigned class is outside the family regardless of how the family is drawn, and is classified individually under section 6.1. An act inside no standing family follows section 6.4 unchanged.
+
+Adopting, widening, or reclassifying a standing record is K4, because it changes what the system will do without asking. Narrowing or revoking one is K2, per the asymmetry of section 6.3. The reference implementation ships one standing record as Phase 1 constitution content, covering owner performed capture, placement, and editing within its declared authoring surfaces.
 
 ---
 
@@ -418,7 +434,7 @@ Break glass use count is a health metric. Frequent use means an envelope is draw
 
 ### 8.1 Contents of a grant
 
-A grant MUST carry the granting party, the receiving role or actor, the envelope, a validity interval, a redelegation permission, a revocation authority, and a signature over the whole. A grant MUST reference its parent grant unless it is rooted directly in the owner.
+A grant MUST carry the granting party, the identity of the granting brain expressed as its brain identifier or Charter digest, the receiving role or actor, the envelope, a validity interval, a redelegation permission, a revocation authority, and a signature over the whole. A grant MUST reference its parent grant unless it is rooted directly in the owner. The brain identifier is what makes section 13.3 mechanically checkable: one human rooting two brains produces chains distinguishable only by the brain each grant names, and chain verification MUST reject a chain containing a grant whose brain identifier is not the deciding brain's.
 
 A grant is a record in the brain and follows the record contract. Grants are append only. A grant is never edited; it is superseded or revoked.
 
@@ -442,6 +458,8 @@ Every grant carries a validity interval. An open ended grant is permitted only f
 
 Revocation ends a grant's validity going forward. It MUST NOT invalidate decisions made while the grant was valid, and it MUST NOT alter the grant record.
 
+A revocation is itself a grant family record, append only, signed by the revocation authority the grant names. It MUST carry the digest of the grant it revokes and the time of revocation, and it MUST be discoverable by the same enumeration that resolves the grant, so a chain walker cannot find a grant without finding its revocations. A walker that cannot enumerate revocations for a grant MUST treat the chain as unverifiable, and an unverifiable chain confers nothing.
+
 This requires that a decision record pin the digest of every grant on the chain it relied on, so the chain can be re verified as it stood at decision time. Without pinning, revoking a grant silently rewrites the audit history of every decision made under it, which converts revocation from a security operation into a records tampering operation.
 
 ### 8.5 Suspension and the compromised actor
@@ -460,11 +478,15 @@ A decision MUST be routed to the least authorized role whose envelope covers the
 
 Least authorized, not most senior. This is the operational inversion that makes delegation work. Routing upward by default fills the owner's queue with decisions that three roles below were authorized to make, and the queue is the thing being optimized.
 
+Least authorized is the coverage order of section 4.5. Role A is less authorized than role B when the union of B's envelopes covers the union of A's and the converse does not hold. Coverage is a partial order, so a least holder need not be unique; the routing target set is the minimal elements of the order among holders whose envelope covers the act, and the declared selection rule chooses within that set. A router that reduces authority to a single scalar for comparison has reintroduced the second compression of section 1.3.
+
 If no envelope covers the act, the decision routes to the owner and a coverage gap is recorded. Persistent coverage gaps at the owner are the primary signal for where to grant next, and a brain SHOULD report them as a ranked list rather than making the owner notice a pattern in their own queue.
 
 ### 9.2 Resolution outcomes
 
 A decision request resolves to exactly one of: `approved`, `denied`, `lapsed`, `withdrawn`, or `superseded`. Execution is a separate subsequent event and MUST be recorded separately.
+
+`superseded` records that a newer decision request replaced this one before resolution. The record MUST name the superseding request by digest. Supersession is neither approval nor denial and carries no authority forward; the superseding request enters at `proposed` and is classified and routed on its own. `withdrawn` differs in that nothing replaces the request.
 
 The state progression is `proposed`, `classified`, `routed`, then either `resolved` directly where an envelope covers the act without review, or `pending` then `resolved`. Every transition is a ledger event.
 
@@ -488,7 +510,7 @@ Quorum members MUST resolve independently, without visibility of each other's re
 
 An approval binds to the digest of the act as proposed. Any change to the act voids the approval and requires a new decision request. This is Blueprint principle 3 applied to delegation, and it closes the gap where a small clarifying edit after approval carries the approval with it.
 
-The reference implementation binds approvals to a step identifier rather than to content, which permits exactly this drift. Identifiers are stable across content change, which is the property you do not want here.
+The progenitor system binds approvals to a step identifier rather than to content, which permits exactly this drift. Identifiers are stable across content change, which is the property you do not want here.
 
 ### 9.6 Approval expiry
 
@@ -612,6 +634,8 @@ Claims in a decision record carry the TRACE evidence grades. A claim the brain c
 
 An attested claim MUST NOT be the sole evidence for a conformance assertion. A meter reading attested by the actor whose envelope it bounds is not a control, which is why the brain computes its own classification and its own readings in section 6.4.
 
+One carve-out exists at Tier 1. A claim entered by the owner over the owner's own signature is owner attested, and owner attestation MAY stand as sole evidence at Tier 1, because the owner is the terminal authority the evidence chain exists to reach and there is no more authoritative source to check the claim against. The carve-out is exactly that wide. It never extends to an agent or harness attestation at any tier, and at Tier 2 and above the brain computes its own readings and an owner attested claim becomes corroboration, not sole evidence.
+
 ---
 
 ## 13. Delegation Across a Boundary
@@ -681,9 +705,13 @@ This is deliberately inconvenient, and the inconvenience is the point. The momen
 
 ### 15.1 Tier requirements
 
+A body requirement binds at the lowest tier whose obligations in this section require the mechanism it constrains. Sections 3, 6, 12.1, and 12.4 bind at Tier 1. Sections 4, 5, 7 through 11, 12.2, 12.3, and the owner load budget of section 15.3 bind at Tier 2. Section 13 binds at Tier 3. The health invariants of section 15.2 bind at the tier of the mechanism each checks. The four absolute requirements of the Conformance section bind at every tier at which their subject exists: a Tier 1 brain that has issued no grant has no chain to verify, and the first grant it issues brings sections 4, 5, and 8 through 10 into force regardless of tier.
+
 **Tier 1.** A brain MUST declare its owner, MUST define its roles with `reports_to` where applicable, MUST classify every act by consequence class before execution, and MUST record every decision in the ledger.
 
 A Tier 1 brain is permitted to delegate nothing. The owner may decide everything. What is not permitted is acting without a classified, recorded decision, because a brain that cannot say who authorized what is not a brain the owner controls.
+
+The classification obligation MAY be satisfied by standing pre-classification under section 6.6. Ordinary owner editing inside a declared standing family needs no per act record; an act outside every family is classified individually, and an unclassifiable act refuses under section 6.5.
 
 **Tier 2.** A brain MUST additionally define authority envelopes on all four axes, MUST confer authority only by signed grant, MUST verify a human root on every use, MUST enforce the strict subset rule on redelegation, MUST route to the least authorized covering holder, MUST enforce the prohibited resolutions of section 9.3, MUST declare a timeout window and disposition per consequence class, MUST bind approvals to digests with execution windows, MUST compute windowed aggregates per chain, MUST run two sided reconciliation, and MUST declare and monitor an owner load budget.
 
@@ -717,6 +745,8 @@ The Charter MUST declare an owner load budget: the maximum number of decisions t
 
 Exceeding it is a governance defect and MUST be reported as one. It is not a busy week.
 
+A `hold-open` decision counts toward the owner queue depth and is excluded from the maximum pending age. Its aging is already surfaced by the red check that section 10.1 attaches to the disposition, and counting one unattended decision as two budget breaches adds alarm without information. The count of open `hold-open` decisions is reported alongside the budget, because a brain accumulating them is choosing red checks over decisions.
+
 This inverts the usual reading of an approval queue. A long owner queue is normally interpreted as diligence, and it is more often evidence that envelopes are drawn too narrowly, that coverage gaps have gone unclosed, that roles sit vacant, or that classification is overstating consequence. All four are fixable, and none of them gets fixed while the queue is read as a sign of care.
 
 Coverage gaps at the owner are the actionable output. A brain SHOULD report them ranked by frequency, since the top of that list is the next grant that should be written.
@@ -748,6 +778,8 @@ A conformant brain MUST provide a self test that seeds each of the following and
 21. A decision routed to a vacant role, asserting timeout rather than reassignment
 22. A grant signed by a peer brain's role
 23. An owner load budget breach, asserting a governance defect was raised
+
+Cases 7, 13, and 14 require elapsed windows and accumulated aggregates. A simulated clock is conformant for the self test, provided the implementation under test reads time only through the source the simulation controls. A test that advances a clock the production code does not read has tested a different system, and its pass is not evidence.
 
 ---
 

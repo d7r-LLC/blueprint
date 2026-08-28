@@ -10,7 +10,7 @@
 **Schema:** `schema/v1/`
 **License:** Apache 2.0
 **Requires:** BLUEPRINT/1.0 Tier 1
-**See also:** TRACE/1.0
+**See also:** TRACE/1.0, SPEAK/1.0
 
 ---
 
@@ -51,6 +51,7 @@ Every normative requirement in this document has a defined failure mode. The def
    3.3 Evidence and expiry
    3.4 Model declarations and version pinning
    3.5 Status lifecycle
+   3.6 Dual representation and frontmatter mapping
 4. Inference Authorizations
    4.1 Structure
    4.2 Binding to an actor
@@ -145,7 +146,7 @@ A custody class answers one question: at the moment of inference, who has physic
 
 Classes are ordered from highest custody to lowest. Lower numbers are stronger.
 
-**C0 Resident.** Inference executes on hardware the brain owner owns and physically possesses. Model weights are stored locally. The operation requires no network egress of record content whatsoever. Example: a quantized model running on the owner's laptop or a machine in the owner's home or office.
+**C0 Resident.** Owner controlled local compute. Inference executes on hardware the brain owner owns and physically possesses. Model weights are stored locally. The operation requires no network egress of record content whatsoever. Example: a quantized model running on the owner's laptop or a machine in the owner's home or office. The class turns on two properties together: the owner controls the host, and the operation produces no network egress of record content. A provider lacking either property is not C0.
 
 **C1 Enclave.** Hardware the owner controls administratively but does not physically possess. The owner controls the operating system, holds the disk encryption keys, and installed the model weights. Record content leaves the owner's premises but does not leave the owner's administrative control. Example: a dedicated colocated server, or a bare metal rental with owner managed full disk encryption.
 
@@ -197,9 +198,11 @@ Every retention claim MUST be supported by at least one evidence entry recording
 
 Evidence MUST expire. An implementation MUST NOT accept an evidence entry with no `expiresAt`.
 
-When the newest supporting evidence for a provider expires, the provider's status MUST degrade automatically to `probationary`. A `probationary` provider MAY receive records whose sensitivity is `none` and whose visibility is `public`, and MUST NOT receive anything else.
+When the newest supporting evidence for a provider of class C1, C2, C3, or C4 expires, the provider's status MUST degrade automatically to `probationary`. A `probationary` provider MAY receive records whose sensitivity is `none` and whose visibility is `public`, and MUST NOT receive anything else.
 
 This requirement exists because a retention commitment is a document, not a memory, and because no control in a brain may depend on the owner remembering to revisit it.
+
+C0 providers are the carve out. There is no counterparty behind a C0 provider, so its evidence is the owner's own attestation of the configuration, of kind `self-hosted`, recording the weights digest per 3.4 and the host identity. That attestation MUST still carry an `expiresAt`, because a stale attestation is a stale claim. Expiry of C0 evidence MUST be reported as unhealthy and MUST require owner re-attestation before the provider record is next modified, but MUST NOT degrade the provider to `probationary`, because there is no third party commitment behind a C0 provider capable of silently changing. Restricting inference on the owner's own machine to public material because a self attestation aged out would punish the strongest custody class for the failure mode of the weakest.
 
 ### 3.4 Model declarations and version pinning
 
@@ -217,15 +220,34 @@ draft -> authorized -> probationary -> authorized
 
 Only the owner may move a provider to `authorized`. Degradation to `probationary` is automatic on evidence expiry. `prohibited` is terminal and MUST cause every authorization referencing the provider to fail closed.
 
+Entry into `suspended` is an owner action. Only the owner may move a provider to `suspended`, by a signed decision record naming the reason. Suspension is the holding state for a suspected posture change pending review; calls to a suspended provider MUST be refused with failure class `provider-suspended`. Only the owner may move a provider to `prohibited`. No automatic process may move a provider anywhere except to `probationary`.
+
+### 3.6 Dual representation and frontmatter mapping
+
+The canonical form of a provider record, an authorization, and a call ledger entry is the JSON object valid against the corresponding schema in `schema/v1/`. An implementation MAY store any of these records as a Markdown file with YAML frontmatter, and a brain built on plain files is expected to. Where it does, the mapping MUST be deterministic and lossless in both directions:
+
+- Frontmatter keys map one to one to schema property names, with no renaming and no synthesized fields.
+- Nested objects map to YAML mappings and arrays to YAML sequences.
+- Date-time values are ISO 8601 strings. The literal `unknown` remains the string `unknown`.
+- The Markdown body below the frontmatter is commentary. It MUST NOT carry any schema governed field, because a value that lives in prose is a value no validator sees.
+
+Validation MUST operate on the JSON object extracted by this mapping. A record whose frontmatter does not extract to a schema valid object is invalid, and a broker that encounters one MUST refuse with failure class `registry-unreadable`.
+
+An instantiation MUST publish its mapping as a `MAPPING.md` alongside its `schema/v1/` copy. The reference implementation's `MAPPING.md` is the reference mapping, and an instantiation that adopts it unchanged satisfies this section.
+
 ---
 
 ## 4. Inference Authorizations
+
+Tier binding: this section binds at Tier 2 and above. At Tier 1 an authorization is RECOMMENDED; where one exists it MUST conform to this section, because a nonconforming grant is worse than none: it records a permission nobody bounded.
 
 ### 4.1 Structure
 
 An inference authorization is the owner's signed grant permitting a named actor to send a bounded class of records to a bounded set of providers for a bounded set of purposes. It is to inference what a peer agreement is to exchange, with the difference that it is unilateral, because the counterparty is not a brain and cannot countersign.
 
 The normative shape is defined in `schema/v1/inference-authorization.schema.json`.
+
+The field `maxCustodyClass` names the weakest custody class the grant permits, which is the numerically highest permitted class. `maxCustodyClass: C2` permits providers of effective class C0, C1, and C2, and prohibits C3 and C4. The word max refers to the class number, not to the strength of the custody; classes are ordered with lower numbers stronger, per 2.1. The same reading applies wherever the field appears, including the peer agreement declaration in 11.1, where it states the weakest class at which a transferred record may be processed. Worked examples appear in Appendix D.
 
 ### 4.2 Binding to an actor
 
@@ -249,6 +271,8 @@ Every authorization MUST have an `expiresAt`. An implementation MUST NOT accept 
 
 ## 5. The Custody Matrix
 
+Tier binding: enforcement of this section is a MUST at Tier 2 and above and a SHOULD at Tier 1, per 12.1. Where a Tier 1 brain applies the matrix, 5.2 and 5.3 apply as written.
+
 ### 5.1 Normative defaults
 
 The following matrix binds the sensitivity of a record to the custody classes it may cross into. These are the normative defaults for a conformant brain.
@@ -261,11 +285,13 @@ The following matrix binds the sensitivity of a record to the custody classes it
 | `third-party` | allow with processing consent | allow with processing consent | processing consent and unexpired evidence | prohibit | prohibit |
 | `confidential` | allow | per record owner approval | prohibit | prohibit | prohibit |
 
+Cells carrying a qualifier restate a condition from section 7 in the cell where it most often bites; they do not create a distinct requirement, and a plain `allow` cell does not waive one. In particular, `allow with unexpired evidence` restates condition 3, which binds for every call to a C1, C2, C3, or C4 provider regardless of cell text.
+
 Two properties of this matrix are intentional.
 
 First, C4 is prohibited for everything that is not already public. A brain that wishes to use a consumer tier service may do so only with material it would publish anyway.
 
-Second, C0 is permissive at every sensitivity, because a C0 provider produces no egress of record content. The matrix therefore creates a gradient in favor of owned inference infrastructure. That is deliberate: the strongest control available to a brain owner is to own the machine that performs the inference.
+Second, C0 is the most permissive column at every sensitivity, because a C0 provider produces no egress of record content. One requirement survives zero egress: a `third-party` record requires processing consent at every custody class, C0 included, as the table states and 5.3 requires, because consent governs the act of processing, not only the destination of the bytes. The matrix otherwise creates a gradient in favor of owned inference infrastructure. That is deliberate: the strongest control available to a brain owner is to own the machine that performs the inference.
 
 ### 5.2 Raising a limit
 
@@ -284,6 +310,8 @@ This is the requirement most likely to be inconvenient in practice, and it is th
 ---
 
 ## 6. The Inference Broker
+
+Tier binding: this section binds at Tier 2 and above. Tier 1 has no broker; its refusing component is the audit time check defined in 12.1.
 
 ### 6.1 Single chokepoint
 
@@ -307,13 +335,15 @@ A refusal MUST be recorded. An unrecorded refusal is indistinguishable from a ca
 
 ## 7. The Inference Check
 
+Tier binding: at Tier 2 and above the broker MUST evaluate every condition before the call and refuse inline. At Tier 1 the check runs at audit time over the ledger and registry, per 12.1: conditions 2, 3, 11, and 12 MUST hold for every ledgered call, condition 7 MUST hold for every `third-party` input, and condition 5 SHOULD hold, consistent with 12.1. Conditions that presuppose an authorization or an assembled payload, which are 1, 4, 6, 8, 9, 10, 13, and 14, bind at Tier 2 and, at Tier 1, wherever those components exist. A Tier 1 audit that finds a violated condition MUST fail closed by reporting the brain nonconformant; it cannot un-send the bytes, and it MUST NOT pretend otherwise.
+
 ### 7.1 Conditions
 
 The broker MUST refuse the call unless every one of the following holds.
 
 1. An authorization exists that names this actor, is signed by the owner, and has not expired or been revoked.
 2. Every requested `providerId` is present in the registry with status `authorized`, or with status `probationary` where the payload qualifies under 3.3.
-3. The newest supporting evidence for the provider has not expired.
+3. For a provider of custody class C1, C2, C3, or C4, the newest supporting evidence for the provider has not expired. C0 providers are governed by the re-attestation rule in 3.3.
 4. The provider's effective custody class, computed per 2.3, is at least as strong as the authorization's `maxCustodyClass`.
 5. Every input record's sensitivity is permitted at that custody class by the matrix in 5.1, as amended by any owner decision under 5.2.
 6. Every input record falls within a scope enumerated by the authorization.
@@ -323,20 +353,26 @@ The broker MUST refuse the call unless every one of the following holds.
 10. The call does not exceed the authorization's rate or payload size limits.
 11. The requested model and version are enumerated in the provider record.
 12. Any input record admitted from a peer brain carries a custody floor no weaker than the provider's effective class, per section 11.
+13. The call's purpose is enumerated by the authorization, per 4.3.
+14. Every part of the assembled payload is accounted for: it is the content of a cited input record, a redacted derivative of one produced under the named profile, or instruction and template text authored under the actor's charter. Brain record content that reaches the payload without being cited as an input record MUST cause refusal with failure class `payload-uncited-content`, because a payload assembled from uncited content is an unledgered disclosure wearing a ledgered one's clothes.
 
 ### 7.2 Failure classes
 
 Failure classes are stable identifiers recorded on refusals so that patterns are countable. The registry is normative and appears in Appendix E. The initial set:
 
-`authorization-absent`, `authorization-expired`, `authorization-revoked`, `actor-unauthorized`, `provider-unregistered`, `provider-suspended`, `provider-prohibited`, `evidence-expired`, `custody-class-exceeded`, `sensitivity-exceeds-custody`, `scope-not-permitted`, `processing-consent-absent`, `denied-key-present`, `redaction-not-applied`, `rate-limit-exceeded`, `payload-too-large`, `model-undeclared`, `model-substitution`, `custody-floor-violation`, `ledger-unavailable`, `registry-unreadable`, `purpose-not-permitted`.
+`authorization-absent`, `authorization-expired`, `authorization-revoked`, `actor-unauthorized`, `provider-unregistered`, `provider-suspended`, `provider-prohibited`, `evidence-expired`, `custody-class-exceeded`, `sensitivity-exceeds-custody`, `scope-not-permitted`, `processing-consent-absent`, `denied-key-present`, `redaction-not-applied`, `rate-limit-exceeded`, `payload-too-large`, `model-undeclared`, `model-substitution`, `custody-floor-violation`, `ledger-unavailable`, `registry-unreadable`, `purpose-not-permitted`, `payload-uncited-content`.
+
+Appendix E additionally registers `transport-error`, which records a call that failed in transit after passing the check. It carries verdict `failed`, not `refused`.
 
 ---
 
 ## 8. The Call Ledger
 
+Tier binding: the ledger obligation binds at every tier. Per attempt granularity binds at Tier 2 and above; the acceptable Tier 1 granularity is defined in 12.1.
+
 ### 8.1 Entry format
 
-Every call attempt, whether completed, refused, or failed, MUST produce exactly one append only ledger entry. The normative shape is defined in `schema/v1/inference-call.schema.json`.
+Every call attempt, whether completed, refused, or failed, MUST produce exactly one append only ledger entry. The normative shape is defined in `schema/v1/inference-call.schema.json`. At Tier 1 this per attempt granularity is relaxed to the session granularity defined in 12.1; at Tier 2 and above it binds as written.
 
 ### 8.2 Hashes, not prompts
 
@@ -348,6 +384,8 @@ This is a deliberate and load bearing restriction. A ledger that stores prompts 
 
 An owner MAY enable prompt and response retention for a specific authorization. Where enabled, retained transcripts MUST be written to a separate surface, MUST carry their own sensitivity and visibility, MUST NOT be written into the ledger, and MUST be referenced from the ledger entry by hash only.
 
+The retention period is enforced, not decorative. Where the authorization's transcript retention declares a `retainFor` period, every retained transcript MUST be purged when that period elapses, measured from the call's `completedAt`, and the purge MUST be recorded. Where `retainFor` is null, a retained transcript MUST NOT outlive the authorization's `expiresAt`. A transcript found beyond its retention bound MUST be reported as unhealthy, per 12.2.
+
 ### 8.4 Hash chaining and audit
 
 Call ledger entries MUST be hash chained by `prevEntrySha256` and MUST be signed. The chain head is what an auditor attests to.
@@ -357,6 +395,8 @@ The ledger MUST be able to answer, for any record in the brain, the complete lis
 ---
 
 ## 9. Output Handling
+
+Tier binding: this section binds at every tier. It governs what may be admitted into the brain, and admission exists at Tier 1.
 
 ### 9.1 Derived content provenance
 
@@ -370,11 +410,13 @@ Generated content MUST enter the brain at the earliest lifecycle stage. Model ou
 
 ### 9.3 Gates and generated content
 
-Generated content MUST NOT satisfy a gate, and an inference call MUST NOT set, clear, or alter a gate. This follows directly from the Blueprint requirement that agents draft and the owner decides, and it closes the path by which a brain could launder a model's assertion into an approved position.
+Generated content MUST NOT satisfy a gate, and an inference call MUST NOT set, clear, or alter a gate. This follows directly from the Blueprint requirement that agents draft and the owner decides, and it closes the path by which a brain could launder a model's assertion into an approved position. A gate is satisfied by an owner decision about an artifact, never by the existence of the artifact: the owner MAY approve a gate on generated content, and that approval is the owner's act, which this section does not restrict.
 
 ---
 
 ## 10. Special Cases
+
+Tier binding: each case binds at the tier of the mechanism it extends. 10.1 and 10.2 bind wherever the registry and ledger bind, which is every tier. 10.3 binds at Tier 2 and above, because it presupposes the broker. 10.4 binds at every tier, because it requires an owner decision, and owner decisions exist at Tier 1.
 
 ### 10.1 Embeddings and vector stores
 
@@ -403,6 +445,8 @@ Where training occurs at custody class C2 or weaker, the resulting weights MUST 
 ---
 
 ## 11. Custody Floors Across Brains
+
+Tier binding: this section binds at Tier 3, together with SPEAK/1.0, which owns the peer agreement artifact it constrains.
 
 ### 11.1 Declaration in a peer agreement
 
@@ -437,7 +481,27 @@ A brain that detects a floor violation by a peer MAY suspend the agreement. The 
 
 **Tier 1 Sovereign.** A brain that performs any inference MUST maintain a provider registry and MUST record every call in an append only ledger. It SHOULD apply the custody matrix.
 
+At Tier 1 the ledger obligation is satisfiable at session granularity. Tier 1 names no broker and therefore no component positioned to write a per call entry inline; the conformant Tier 1 mechanism is hooks installed by the brain's tooling that write, for every tooling session performing inference, at least one ledger entry covering the session's calls, citing the provider record and cross referencing the session anchor where TRACE/1.0 is in effect. A call is recorded, in the Tier 1 sense, when a ledger entry covers it. Per call entries are RECOMMENDED at Tier 1 and REQUIRED at Tier 2. Inference performed with no covering entry, including inference performed while the hooks are not installed, is unledgered inference and is nonconformant.
+
+The refusing component at Tier 1 is the conformance check executed at audit time, not an inline broker. That check MUST fail closed: it MUST report the brain nonconformant when inference occurred that no ledger entry covers, when a ledgered call cites an unregistered provider, or when any Tier 1 condition of section 7 is violated on the ledger's face. An audit time refusal cannot un-send the bytes; what it refuses is the claim of conformance, which is the only enforcement a brain without a broker possesses.
+
 Cataloging is required even at the lowest tier. A brain that cannot say what it has sent, and where, is not a brain the owner controls.
+
+The tier at which each section of this specification binds:
+
+| Section | Tier 1 | Tier 2 | Tier 3 |
+|---|---|---|---|
+| 2 Custody Classes, 3 Provider Registry | MUST | MUST | MUST |
+| 4 Inference Authorizations | RECOMMENDED; MUST conform where present | MUST | MUST |
+| 5 Custody Matrix | SHOULD | MUST | MUST |
+| 6 Inference Broker | not required | MUST | MUST |
+| 7 Inference Check | audit time, Tier 1 subset per section 7 | MUST, inline | MUST, inline |
+| 8 Call Ledger | MUST, session granularity | MUST, per call | MUST, per call |
+| 9 Output Handling | MUST | MUST | MUST |
+| 10 Special Cases | per section 10 | per section 10 | per section 10 |
+| 11 Custody Floors Across Brains | not required | not required | MUST |
+
+Text within a section that states its own tier scope prevails over this table.
 
 **Tier 2 Governed.** MUST route all inference through a single broker. MUST enforce the custody matrix. MUST isolate provider credentials from agents. MUST bind every agent charter to an authorization. MUST fail closed on expired evidence.
 
@@ -445,15 +509,17 @@ Cataloging is required even at the lowest tier. A brain that cannot say what it 
 
 ### 12.2 Health invariants
 
-A conformant brain MUST continuously check, and MUST report as unhealthy, each of the following.
+A conformant brain MUST continuously check, and MUST report as unhealthy, each of the following. At Tier 1 the invariants are evaluated on every run of the audit time check rather than continuously, and an invariant that presupposes a broker or an authorization binds only where that component exists.
 
-- Network egress from a brain host to an endpoint not present in the provider registry.
+- Record content transmitted from any brain component to a network endpoint that is neither present in the provider registry, nor an authorized boundary transfer under SPEAK/1.0, nor a declared artifact flow under TRACE/1.0. Host egress that carries no record content, such as version control synchronization or ordinary browsing, is out of scope. Egress by a broker process to any endpoint not present in the provider registry is in scope regardless of content.
 - Any provider whose newest evidence expires within 30 days.
 - Any authorization expiring within 30 days.
 - Any provider credential readable from a path inside the brain folder.
 - Any record carrying `derivedVia` with no corresponding call ledger entry.
 - Any call ledger entry whose chain link does not verify.
 - Any agent charter naming an absent, expired, or revoked authorization.
+- Any retained transcript older than its retention bound under 8.3.
+- Any C0 provider whose newest self attestation has expired without re-attestation, per 3.3.
 
 ### 12.3 Self test
 
@@ -464,3 +530,97 @@ A Tier 2 brain MUST publish a self test that seeds a deliberate violation of eac
 ## 13. Versioning and Governance
 
 As BLUEPRINT/1.0 section 14. Any change to the custody class definitions, or to the matrix in 5.1, is at minimum MINOR, and any change that widens a matrix cell is MAJOR.
+
+---
+
+## Appendix A: Provider schema
+
+The normative machine readable shape is `schema/v1/inference-provider.schema.json` (`contractVersion: confide-provider/v1`). On any divergence between this summary and the schema file, the schema file governs.
+
+Required fields: `contractVersion`, `providerId` (`infer:` prefixed), `displayName`, `custodyClass`, `operator`, `egress`, `retention`, `evidence`, `models`, `limits`, `status`.
+
+- `custodyClass` is declared, never inferred from a vendor name, per 2.2. `effectiveCustodyClass` is the weakest class in the provider chain, per 2.3.
+- `egress: none` is valid only for C0.
+- `retention` carries the full posture of 3.2: `inputRetention`, `outputRetention`, `trainingUse`, `humanReview`, `promptCaching`, `subprocessors`, `jurisdictions`, `deletionRight`. Every field is a declared value or the literal `unknown`. `subprocessors: unknown` forces the effective class to C4, per 2.3.
+- `evidence` entries require `kind`, `sha256`, `retrievedAt`, and `expiresAt`, per 3.3. For C0, the kind is `self-hosted`.
+- `models` entries require `modelId` and `version`; `weightsSha256` and `quantization` are required for C0, C1, and C2, per 3.4.
+- `status` follows the lifecycle of 3.5.
+
+## Appendix B: Authorization schema
+
+The normative machine readable shape is `schema/v1/inference-authorization.schema.json` (`contractVersion: confide-authorization/v1`). On any divergence between this summary and the schema file, the schema file governs.
+
+Required fields: `contractVersion`, `authorizationId` (`infauth:` prefixed), `actor`, `providerIds`, `purposes`, `maxCustodyClass`, `maxSensitivity`, `scopes`, `createdAt`, `expiresAt`, `signature`.
+
+- `actor` names exactly one Blueprint Layer 7 actor identity, per 4.2.
+- `purposes` draws from the closed enumeration `summarize`, `classify`, `extract`, `draft`, `translate`, `embed`, `critique`, `rerank`, `transcribe`. There is no catch all, per 4.3.
+- `maxCustodyClass` reads per 4.1: the numerically highest, that is weakest, permitted class.
+- `expiresAt` is required, per 4.5. The `signature.actor` is the owner; an agent identity never appears there.
+- Optional blocks: `redaction` (4.4), `denyKeys`, `limits` (rate, payload, records per call, loop turns), `transcriptRetention` (8.3).
+
+## Appendix C: Call record schema
+
+The normative machine readable shape is `schema/v1/inference-call.schema.json` (`contractVersion: confide-call/v1`). On any divergence between this summary and the schema file, the schema file governs.
+
+Required fields: `contractVersion`, `callId`, `authorizationId`, `authorizationSha256`, `providerId`, `custodyClass`, `actor`, `purpose`, `inputs`, `startedAt`, `verdict`, `signature`.
+
+- `inputs` entries carry `recordId`, `bodySha256`, and `sensitivity`, plus `custodyFloor` and `originBrainId` for peer admitted records and `readDuringLoopTurn` for loop reads, per 10.3.
+- `promptSha256` and `promptBytes` record what crossed; the text never does, per 8.2. `transcriptRef` is a hash only pointer, per 8.3.
+- `verdict` is `completed`, `refused`, or `failed`. `failureClass` draws from Appendix E.
+- `prevEntrySha256` chains the ledger and `signature` signs the entry, per 8.4.
+
+## Appendix D: Custody classification worked examples
+
+Classification of a provider, per section 2. Each example describes an endpoint under terms, never a company.
+
+| Situation | Class | Why |
+|---|---|---|
+| Quantized open weights model on the owner's laptop | C0 | Owner controlled host, zero record content egress. |
+| Dedicated colocated server, owner managed full disk encryption, owner installed weights | C1 | Owner administrative control; content leaves the premises, not the owner's control. |
+| GPU virtual machine on a general cloud, owner supplied open weights | C2 | Owner controls the stack; the infrastructure operator has technical access to memory and storage. |
+| Model vendor enterprise endpoint with a DPA, zero retention terms, and a training prohibition | C3 | Contractual recourse and documentary evidence, no technical control. |
+| The same vendor's free consumer endpoint | C4 | Different terms, different class. The record describes the endpoint, per 2.1. |
+| Any provider recorded with `subprocessors: unknown` | C4 | Unknown never widens, per 2.3 and 2.4. |
+| Request time routing service with no pinned downstream provider | C4 | The effective counterparty is unknown at call time, per 2.3. |
+| C3 vendor that subcontracts inference to a C4 routing service | C4 | Weakest link in the chain, per 2.3. |
+
+Reading `maxCustodyClass`, per 4.1:
+
+| Grant | Permits | Prohibits |
+|---|---|---|
+| `maxCustodyClass: C0` | C0 only | C1, C2, C3, C4 |
+| `maxCustodyClass: C2` | C0, C1, C2 | C3, C4 |
+| `maxCustodyClass: C4` | every class | nothing on custody grounds; the matrix in 5.1 still applies |
+
+A peer agreement declaring `maxCustodyClass: C1` on its outbound direction, per 11.1, means transferred records may be processed at C0 or C1 and at nothing weaker; the receiving brain carries that as a custody floor on every admitted record.
+
+## Appendix E: Failure class registry
+
+This registry is normative, per 7.2. A refusal or failure MUST cite exactly one class from this table. Classes are stable identifiers; a class, once published, is never renamed or reused.
+
+| Failure class | Verdict | Trigger |
+|---|---|---|
+| `authorization-absent` | refused | No authorization names the actor (7.1 condition 1). |
+| `authorization-expired` | refused | The named authorization is past `expiresAt` (condition 1). |
+| `authorization-revoked` | refused | The named authorization carries a revocation (condition 1, 4.5). |
+| `actor-unauthorized` | refused | An authorization exists but does not name this actor (condition 1, 4.2). |
+| `provider-unregistered` | refused | A requested `providerId` is absent from the registry (condition 2). |
+| `provider-suspended` | refused | The provider's status is `suspended` (condition 2, 3.5). |
+| `provider-prohibited` | refused | The provider's status is `prohibited` (condition 2, 3.5). |
+| `evidence-expired` | refused | Newest supporting evidence for a C1 to C4 provider has expired (condition 3). |
+| `custody-class-exceeded` | refused | Effective custody class weaker than the authorization's `maxCustodyClass` (condition 4). |
+| `sensitivity-exceeds-custody` | refused | An input's sensitivity is not permitted at this custody class by the matrix (condition 5). |
+| `scope-not-permitted` | refused | An input record falls outside every authorized scope (condition 6). |
+| `processing-consent-absent` | refused | A `third-party` input lacks granted processing consent (condition 7, 5.3). |
+| `denied-key-present` | refused | A denied key appears in the assembled payload (condition 8). |
+| `redaction-not-applied` | refused | A required redaction profile was not applied or not manifested (condition 9). |
+| `rate-limit-exceeded` | refused | The call exceeds the authorization's rate limits (condition 10). |
+| `payload-too-large` | refused | The call exceeds the authorization's payload size limit (condition 10). |
+| `model-undeclared` | refused | The requested model and version are not enumerated by the provider record (condition 11). |
+| `model-substitution` | failed | The response reports a different model or version than was pinned (3.4). |
+| `custody-floor-violation` | refused | A peer admitted input carries a custody floor stronger than this provider's class (condition 12, section 11). |
+| `ledger-unavailable` | refused | The broker cannot reach its own ledger (6.3). |
+| `registry-unreadable` | refused | The broker cannot read the provider registry, or a record fails frontmatter extraction (6.3, 3.6). |
+| `purpose-not-permitted` | refused | The call's purpose is not enumerated by the authorization (condition 13, 4.3). |
+| `payload-uncited-content` | refused | Brain record content reached the payload without citation as an input record (condition 14). |
+| `transport-error` | failed | The call passed the check and failed in transit; the entry still records what was attempted. |

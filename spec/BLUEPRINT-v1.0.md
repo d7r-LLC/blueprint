@@ -20,7 +20,7 @@ The Blueprint is a specification of structure and governance, not an implementat
 
 The Blueprint is customizable by design. An owner MUST be able to define their own taxonomy, their own workflow, and their own vocabulary. What the Blueprint fixes is not the shape of the knowledge but the discipline at its edges: what is recorded, what is approved, what is logged, and what is permitted to leave.
 
-Exchange between brains is defined in a companion specification, SPEAK/1.0. Governance of language model inference over brain content is defined in a companion specification, CONFIDE/1.0. Governance of the artifacts that agent tooling leaves behind is defined in a companion specification, TRACE/1.0. All three are normative for the tiers that require them.
+Six companion specifications complete the protocol set. POLARIS/1.0 governs purpose and refusals, DEFER/1.0 delegated authority, SPEAK/1.0 exchange between brains, CONFIDE/1.0 language model inference over brain content, TRACE/1.0 the artifacts that agent tooling leaves behind, and RETAIN/1.0 the state an engaged agent accumulates. All six are normative for the tiers that require them (section 12).
 
 ---
 
@@ -30,16 +30,14 @@ The key words MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RE
 
 Every normative requirement in this specification has a defined failure mode. Where a requirement can be violated, this document states what a conformant implementation does in response. The default response is to fail closed: refuse the operation rather than proceed with reduced guarantees.
 
+While Status is Draft, some layer sections defer their bodies and say so in place. A deferred layer introduces no requirement of its own; its requirements bind through the explicit citations of section 12, each of which names a companion clause carrying its own defined failure modes. The promise above therefore holds for every requirement this document actually states, and the set of deferred bodies is visible in the text rather than implied.
+
 ---
 
 ## Table of Contents
 
-0. Layer 0: Charter and Purpose (normative body: POLARIS/1.0)
-   0.1 Owner declaration and tier claim
-   0.2 Purpose, refusals, and the loyalty order (POLARIS/1.0 sections 3, 4, 6)
-   0.3 The one way precedence rule (POLARIS/1.0 section 8)
 1. Introduction
-   1.1 The four specification stack
+   1.1 The sibling specification stack
    1.1.1 The Blueprint protocol set
    1.1.2 Precedence
    1.2 Design principles
@@ -51,6 +49,7 @@ Every normative requirement in this specification has a defined failure mode. Wh
    2.4 Lineage and chain of title
    2.5 Tier claim and layer declaration
    2.6 Inference posture declaration
+   2.7 The POLARIS declaration (normative body: POLARIS/1.0 sections 3, 4, and 6)
 3. Layer 1: Constitution
    3.1 The single governing file
    3.2 Precedence and the registry rule
@@ -65,6 +64,7 @@ Every normative requirement in this specification has a defined failure mode. Wh
    4.5 System surfaces
    4.6 Harness artifact roots
    4.7 Scratch surfaces and declared exceptions
+   4.8 Source surfaces and preservation
 5. Layer 3: Records
    5.1 The frontmatter contract
    5.2 Controlled vocabularies
@@ -132,13 +132,16 @@ Every normative requirement in this specification has a defined failure mode. Wh
     12.2 Tier 2: Governed
     12.3 Tier 3: Federated
 13. Establishment Workflow
-    13.1 The twelve phases
+    13.1 The fifteen phases
     13.2 Individual track
     13.3 Organization track
 14. Versioning and Governance
 15. Registry
 16. Reference Implementation
-    Appendix A: Charter schema
+    16.1 A template is not a brain
+    16.2 Enforcement roadmap
+    16.3 Fixture peers are sibling repositories
+    Appendix A: Schema directory
     Appendix B: Profile: individual
     Appendix C: Profile: organization
     Appendix D: Conformance test suite
@@ -147,9 +150,11 @@ Every normative requirement in this specification has a defined failure mode. Wh
 
 ## 1. Introduction
 
-### 1.1 The four specification stack
+### 1.1 The sibling specification stack
 
-*(to be written: ABR states what agents deserve, DERP what the runtime must provide, SAGA how an agent is represented, and the Blueprint how knowledge is held and exchanged. A Blueprint brain that hosts agent activity SHOULD run on a DERP conformant runtime and SHOULD identify its actors using SAGA identity.)*
+Blueprint is the fourth member of a stack of four sibling specifications: ABR states what agents deserve, DERP what the runtime must provide, SAGA how an agent is represented, and the Blueprint how knowledge is held, governed, and exchanged. A Blueprint brain that hosts agent activity SHOULD run on a DERP conformant runtime and SHOULD identify its actors using SAGA identity.
+
+The sibling stack and the protocol set of section 1.1.1 are distinct groupings, and this document names both to keep them distinct. The sibling stack relates this document to the specifications beside it. The protocol set is this document plus its six normative companions.
 
 ### 1.1.1 The Blueprint protocol set
 
@@ -195,7 +200,7 @@ The combined effect is a ratchet. Constraints accumulate cheaply and are removed
 
 ### 1.2 Design principles
 
-*(to be written. The candidate set, from the design notes:)*
+Sixteen principles govern the design. Their normative status is interpretive: where a requirement of this specification or a companion admits two readings, the reading consistent with these principles governs. A principle does not by itself create a conformance requirement; requirements live in the layer bodies, in section 12, and in the companions. Where a principle is load bearing before its owning layer body is written, the owning section restates it as a requirement with a failure mode: principles 3 and 8 are restated in section 6.
 
 1. Plain text on a device the owner controls is the source of truth.
 2. Location is not permission. A guard fires on promotion, never on placement.
@@ -216,13 +221,280 @@ The combined effect is a ratchet. Constraints accumulate cheaply and are removed
 
 ### 1.3 Terminology
 
-*(to be written: brain, owner, actor, domain, record, source, work, stage, gate, ledger, boundary, peer, utterance, admission, adoption.)*
+| Term | Definition |
+|---|---|
+| brain | A locally owned, policy governed, append only audited collection of plain text records constituted by a signed Charter (section 2) |
+| owner | The single individual or organization the Charter declares; holder of the signing keys and of the final refusal |
+| actor | Any identity that performs acts in a brain: the owner, another human, or an agent identity |
+| tier | One of three cumulative conformance levels a brain claims in its Charter (section 12) |
+| domain | A topology subtree holding the brain's knowledge about one counterparty, commitment, or standing area, declared by a domain manifest (4.2) |
+| record | A plain text file governed by the frontmatter contract of Layer 3; the unit of knowledge |
+| source | Preserved evidence: raw captured bytes held unmodified under a provenance record (4.8, 5.6) |
+| work | The brain's own developing product, advanced through stages toward publication or export |
+| stage | A named position in a work's lifecycle from capture to published; the reference stage set runs 0 through 10 |
+| mid stage | The band in which a work's substance is complete and its belief gate is evaluated, before presentation and publication stages; stage 6 in the reference stage set |
+| gate | A recorded approval bound to the SHA-256 of the approved bytes, void when the bytes change (section 6) |
+| belief gate | The Layer 4 gate at which the owner records that a work's claims are claims the owner actually holds; approved at mid stage |
+| preservation | The recorded property that a source's bytes match its provenance record's digest; structural at Tier 1 (4.8) |
+| promotion blocker | A recorded condition that prevents promotion of a store or record while it is present (RETAIN/1.0 section 3.4) |
+| consequence class | DEFER/1.0 section 6.1's classification of an act by the worst true statement about its reversibility, K0 through K4; K3 is irreversible external (something left the brain), K4 constitutional |
+| ledger | The append only log families of Layer 6 |
+| boundary | An enforced surface where content leaves or enters the brain: to a peer (SPEAK/1.0), to a model (CONFIDE/1.0), or into tooling (TRACE/1.0) |
+| peer | Another brain, under a signed agreement |
+| utterance | The signed transfer unit of SPEAK/1.0 |
+| admission | The verified entry of an inbound artifact into quarantine: inside the brain's folder, outside the brain's knowledge (SPEAK/1.0 section 1.2) |
+| adoption | The routing decision by which the owner moves admitted material into the brain proper; admission is not adoption |
+| harness | An agent tool that can reach brain content (TRACE/1.0 section 2.1) |
+| instantiation | A brain founded from a template by an owner's signature; conformance attaches to instantiations, never to templates (16.1) |
 
 ---
 
-## 2 through 11
+## 2. Layer 0: Charter
 
-*(Layer sections to be written. See `design/0000-workflow-and-spec-design.md` section 3 for the layer table, the per layer notes, and the grounding in the reference implementation.)*
+Layer 0 answers who this brain is, who owns it, and under what claim. It is the root of every verification chain: signatures verify against Charter keys, tier claims are read from the Charter, and a peer that cannot verify a Charter refuses exchange. Layer 0 binds at every tier (12.1).
+
+### 2.1 Brain identity
+
+A brain MUST be identified by a stable identifier declared in its Charter, of the form `brain:<handle>` (SPEAK/1.0 section 2). The identifier MUST NOT encode a filesystem location, a host name, or the owner's legal name, because each of those changes for reasons that have nothing to do with identity.
+
+Exactly one Charter exists per brain, at a location the Constitution anchors (3.4). Two records claiming to be the Charter is a fail closed condition: every operation that requires Charter verification MUST refuse until the owner resolves which one governs. A folder with no resolvable Charter is not a brain and claims nothing.
+
+### 2.2 Ownership and legal entity
+
+The Charter MUST declare exactly one owner: an individual or an organization, with its legal name. One brain, one owner (RETAIN/1.0 section 4.1). Joint ownership is not representable, because a brain that two parties can sign for has no single refusal, and the refusal is the boundary.
+
+An organization owner SHOULD declare its jurisdiction. An owner that also holds a SAGA identity SHOULD cross reference it, so that a human contributor and an agent contributor are the same kind of citizen at the boundary.
+
+### 2.3 Keys and keyring
+
+The Charter MUST declare the brain's public signing keys: for each key an identifier, algorithm, public key material, status (`active`, `retired`, or `revoked`), and creation date. The Charter MUST declare the location of the key revocation list. Private key material MUST NOT be stored within the brain's records or its version history; it lives in operating system key custody outside the tree. A private key found inside the tree is a credential artifact and the check goes red (TRACE/1.0 section 10.5).
+
+A signature that verifies only against a key absent from the Charter, or present with status `revoked`, MUST be treated as no signature. A `retired` key verifies signatures made before its retirement and MUST NOT make new ones. Verification that cannot determine a key's status fails closed.
+
+The owner holds the private keys. A brain whose signing key is held by another party is a domain of that party and MUST NOT be described as a brain (RETAIN/1.0, Conformance clause).
+
+### 2.4 Lineage and chain of title
+
+The Charter MAY carry lineage entries recording what this brain derives from: the origin work, the origin entity and owner, the relationship (`derivative-work`, `assignment`, `license`, or `successor`), and the rights basis. The lineage list is append only. A completed ownership transfer is one signed Charter revision appending a lineage entry, never a rewrite of prior entries, so that chain of title is an audit rather than an archaeology project.
+
+A receiving brain MAY verify chain of title before admitting knowledge, and MAY refuse admission from a brain whose lineage it cannot verify.
+
+### 2.5 Tier claim and layer declaration
+
+The Charter MUST declare the tier the brain claims and the set of layers it implements (section 12). The claim is a floor for verification, not a boast: every check the claimed tier requires MUST pass, and a brain whose checks fail its own claim MUST surface that state rather than continue asserting the claim. A peer MAY refuse exchange with a brain below a required tier, which is what makes the claim load bearing.
+
+A template, and any unsigned clone of one, claims no tier (16.1).
+
+### 2.6 Inference posture declaration
+
+The Charter MUST declare the brain's inference posture: whether an inference broker is operated, the default maximum custody class, and the anchored locations of the provider registry and the call ledger, per CONFIDE/1.0. A brain that performs no inference declares exactly that, and the declaration is what makes the absence checkable. Inference performed under no declared posture is an uncatalogued crossing: the check goes red and the operation MUST be refused where the brain's tooling mediates it.
+
+The Charter likewise declares the tooling surfaces TRACE/1.0 requires: the harness registry, the artifact ledger and store, and the declared scratch surfaces, using the path anchors of 3.4 (see 4.6 and 4.7).
+
+### 2.7 The POLARIS declaration
+
+Layer 0 carries the brain's POLARIS declaration: exactly one purpose statement, at least one refusal with a decidable predicate, a total loyalty order, and the normative status of every declared element, per POLARIS/1.0 sections 3, 4, and 6. The normative body for element kinds, evaluation, amendment, and precedence effect is POLARIS/1.0 in its entirety; this document adds only the placement. The declaration is part of Layer 0 and is adopted at Phase 0, so that a brain has a reason before it has a structure, and every later layer is built under a declaration that can already refuse.
+
+The one way precedence rule of POLARIS/1.0 section 8 governs the declaration's effect on every other layer, as stated in 1.1.2.
+
+---
+
+## 3. Layer 1: Constitution
+
+Layer 1 answers which text governs. It binds at every tier (12.1).
+
+### 3.1 The single governing file
+
+A brain MUST have exactly one governing file, named in the Charter, and every other instruction surface in the brain MUST be subordinate to it: guides, agent instructions, plugin configuration, and generated registries. The Constitution states its own supremacy in its own text, so that a reader holding any one file learns which file wins.
+
+Zero governing files is a brain with no law. Two is worse: each is a fork of authority, and every actor picks the one that permits more. Where two instruction surfaces disagree, the Constitution governs and the disagreement is a defect in the other surface. An operation that cannot determine which text governs MUST refuse.
+
+### 3.2 Precedence and the registry rule
+
+The Constitution MUST state the precedence order of 1.1.2 as it applies inside this brain, from the POLARIS declaration's power to forbid, through the Constitution itself, to profiles and implementation detail.
+
+The registry rule: where the Constitution declares a vocabulary, index, or registry that is generated or mirrored elsewhere, the declaration is the source of truth and the generated copy is subordinate. When the two disagree, the generated copy is the bug. A check that discovers such a disagreement MUST report it and MUST NOT amend the declaration to match the copy, because a subordinate artifact that can amend its source has inverted the precedence this section exists to fix.
+
+### 3.3 Prime directives
+
+The Constitution SHOULD open with a small set of prime directives: the standing rules an operator or agent holds even when no check is running, restating the discipline of this specification in the brain's own voice. Directives do not replace checks. The Constitution MUST NOT present an advisory directive as enforced, because a rule believed enforced and actually advisory is where governance fails first; a directive whose enforcement exists names the check that enforces it.
+
+### 3.4 Path anchors and portability
+
+The Constitution MUST declare a set of named path anchors, and every path cited by a governed record or declaration MUST be expressed relative to an anchor. The anchor set MUST be sufficient to name locations outside the brain's own tree, because harness artifact roots live outside it and TRACE/1.0 section 4.2 declares roots using these anchors: at minimum the brain root, and anchors for the machine surfaces the brain's tooling touches, such as the repository root, the user home, application support, and temporary directories.
+
+Anchors are what make a brain portable: a brain moved to a new machine or path re binds its anchors in one place and every governed reference survives. A machine absolute path in a record is a latent breakage: the schema check MUST report it, a capture surface MAY tolerate it, and it MUST NOT survive promotion.
+
+### 3.5 Amendment
+
+The Constitution MUST declare its own amendment procedure. Amendment is a constitutional act, K4 (DEFER/1.0 section 6.3): owner resolved, recorded as a decision record carrying the SHA-256 of the adopted bytes (8.6). An amendment that is not recorded has not happened: when the Constitution's bytes do not match the last adopted digest, verification fails and the brain treats the on disk text as unadopted until the owner resolves it. Superseded text is superseded by record, never silently overwritten.
+
+---
+
+## 4. Layer 2: Topology
+
+Layer 2 answers where things live and what kind of surface each place is. The owner defines the taxonomy; this layer constrains only its edges. Layer 2 binds at every tier (12.1).
+
+### 4.1 Taxonomy requirements
+
+A conformant topology MUST distinguish four kinds of surface: knowledge surfaces (domains and the shared entity layer), source surfaces (4.8), system surfaces (4.5), and excluded surfaces (4.6, 4.7). Every path in the brain MUST be attributable to exactly one kind. A path attributable to none is an unclassified surface, and the enumeration sweep reports it (TRACE/1.0 section 5.1).
+
+Within those edges the taxonomy is the owner's. This specification never names the owner's folders, only the properties the folders must declare.
+
+### 4.2 Domains and domain manifests
+
+A domain is the unit of knowledge topology: a subtree holding the brain's knowledge about one counterparty, one commitment, or one standing area. A domain is a relationship, not a topic, and the distinction matters at Layer 8: the personal brain's name for a counterparty is a domain, which is why a boundary can later be mounted inside one (10.2).
+
+Every domain MUST carry a domain manifest: a record declaring the domain's name, its type, and its automation posture. A subtree without a manifest is not a domain, whatever its name suggests, and automation MUST NOT treat it as one.
+
+### 4.3 Discovery over registration
+
+Domains MUST be discoverable by enumeration of their manifests, and automation MUST discover domains by that enumeration rather than by a hand maintained central list. A central list maintained by hand is guaranteed to disagree with the tree eventually, and when it does, the brain's automation operates on the list's fiction. Where a generated index of domains exists for convenience, the manifests govern and the index is subordinate (3.2).
+
+### 4.4 The shared entity layer
+
+The topology MUST provide a shared entity layer: surfaces for people, organizations, concepts, and vocabulary that appear in more than one domain, so that a fact about an entity is written once and referenced everywhere it applies. A fact written twice will eventually be corrected once, and the uncorrected copy becomes the one an automation reads.
+
+### 4.5 System surfaces
+
+The topology MUST reserve system surfaces, distinct from knowledge surfaces, for the machinery this specification requires: identity, governance data, ledgers, conformance records, templates, and schema documentation. System surfaces hold records about the brain rather than knowledge in it. Knowledge queries and gates MUST NOT count system surfaces as knowledge, and a check that finds knowledge records living in a system surface reports it.
+
+### 4.6 Harness artifact roots
+
+Every artifact root of every harness operated against the brain MUST be declared, whether the root lies inside the brain's tree or outside it, per TRACE/1.0 section 4.2, using the path anchors of 3.4. A root inside the brain MUST additionally be declared as an excluded surface under 4.7. An undeclared root is the enumeration sweep's first finding, and the sweep failing to run on its declared interval is itself a red check.
+
+### 4.7 Scratch surfaces and declared exceptions
+
+A scratch surface is a path inside the brain that a harness writes and the brain does not govern as knowledge. Every scratch surface MUST be declared. A declared scratch surface MUST be excluded from knowledge: no gate may count it, no promotion may source from it without an explicit adoption decision, and version control SHOULD exclude it, with declared directive artifacts as the tracked exception (TRACE/1.0 section 10.1). Quarantine surfaces (Layer 8) are excluded the same way: inside the folder, outside the knowledge.
+
+The declared exception list is a governed record. An exclusion that exists only in tool configuration, with no declaration, is an undeclared surface and the sweep reports it.
+
+### 4.8 Source surfaces and preservation
+
+The topology MUST distinguish source surfaces from work surfaces. A source is preserved evidence: the raw bytes as captured, never edited. A work is the brain's own developing product. The two MUST NOT share a surface, because an edit that is routine in a work destroys a source.
+
+Preservation is a structural property, and it is the only gate like mechanic that binds at Tier 1. A preserved source consists of the raw artifact, unmodified, plus a provenance record binding the artifact's SHA-256, byte count, and capture date (5.6). A conformant brain verifies preservation by check: recorded digest equals present bytes. A source that fails the check is unpreserved, the check MUST report it, and promotion of anything derived from it MUST be refused while the check is red. Approval routing, belief evaluation, and stage machinery are Layer 4 mechanics and bind at Tier 2 (section 6); the preservation property binds at Tier 1 because without it nothing later is evidence.
+
+---
+
+## 5. Layer 3: Records
+
+Layer 3 answers what a record must say about itself. It binds at every tier (12.1).
+
+### 5.1 The frontmatter contract
+
+Every record MUST carry structured frontmatter declaring, at minimum, its type and its identifier. Every type the brain uses MUST have a declared contract listing its required and optional properties and their value spaces; the contract is what the schema check enforces. A record that violates its type's contract fails the check. A type with no contract is itself the violation.
+
+Fail closed applies at promotion, not placement (principle 2): a malformed note may sit in a capture surface, and it MUST NOT promote, satisfy a gate, or feed automation until it validates.
+
+### 5.2 Controlled vocabularies
+
+Every property whose values are drawn from a fixed set MUST have that set declared in exactly one vocabulary registry. One registry, because two registries disagree, and the property whose legal values depend on which file you opened has no legal values. A value outside the declared set fails the schema check. Extending a vocabulary is an ordinary recorded change; using an undeclared value is not an extension.
+
+### 5.3 Identifiers and filenames
+
+Record identifiers MUST be coordination free: mintable on any host without consulting any other host, timestamp plus entropy or equivalent, never the next free number (8.3). Identity lives in the record, not in its path: a move MUST NOT change an identifier, and references SHOULD cite identifiers rather than paths so that reorganization is not breakage. Filenames SHOULD derive from identifiers or titles by a declared rule, so that a filename collision is a minting error surfaced by check rather than a silent overwrite.
+
+### 5.4 Derived state
+
+State that can be computed from records MUST be declared as derived, and derived state MUST NOT be hand edited. When derived state and its sources disagree, the sources govern and the derived copy is regenerated; this is the registry rule of 3.2 applied to data. A decision or gate MUST cite records, not derived state, because a cache is not evidence.
+
+### 5.5 Authorship
+
+Every record MUST declare its authorship: `human`, `agent-drafted-human-approved`, or `agent`. The declaration matters at every boundary: a receiving brain, a model context, and a reader each have a legitimate interest in whether a claim was authored or generated.
+
+A record with no authorship declaration MUST NOT promote past capture. Where an undeclared record must nevertheless be read, its authorship MUST be read as `agent`, never as `human`, because misattributing generated text to a human is the worse failure and the default must point away from it.
+
+### 5.6 Derivation provenance and custody floors
+
+A record derived from a source MUST name the source it derives from. The provenance record of a preserved source (4.8) is the anchor of every such chain: it binds the source identifier, the SHA-256 of the raw bytes, the byte count, the capture date, and the anchored location of the preserved artifact, and it is written once, at capture.
+
+A record that carries a custody floor, whether admitted from a peer (SPEAK/1.0), processed under CONFIDE/1.0, or inherited through an artifact (TRACE/1.0 section 7.2), keeps that floor in its frontmatter, and every derivative record inherits the strongest floor among its inputs (CONFIDE/1.0 section 11). At Tier 1 the floor properties MUST be preserved and carried where present; enforcement at each crossing binds with the layer that owns the crossing.
+
+---
+
+## 6. Layer 4: Lifecycle
+
+Layer 4 binds at Tier 2 (12.2). Body deferred; its requirements bind via the section 12 citations until this section is written. Layer 4 owns sources versus works, stages, approval gates, change authority, and the source hierarchy. Two rules are stated now because other sections depend on them and no other body carries them. First, approval binds to bytes: a gate approval records the SHA-256 of the approved artifact, computed after the approval metadata is written, and is void the moment the bytes change, the gate reverting to unapproved without human action (fail closed, principle 3). Second, no gate may depend on standing human attention: every gate MUST carry a TTL, a fail closed default, or a check that goes red when the gate is stale, because an unwatched approval queue rots into a pile of pending items nobody reads (principle 8). The preservation property exercised at Phase 4 is not a Layer 4 gate; it is the Layer 2 and Layer 3 structural property of 4.8 and 5.6 and binds at Tier 1.
+
+---
+
+## 7. Layer 5: Classification
+
+Layer 5 binds at Tier 2 (12.2). Body deferred; its requirements bind via the section 12 citations until this section is written. Layer 5 owns sensitivity, visibility, consent to record, consent to process, the publication guard, and the export gate; the custody matrix is defined by CONFIDE/1.0 section 5 and inheritance by artifacts by TRACE/1.0 section 7. One rule is stated now: classification is enforced at exactly one boundary, by a check that terminates with a non zero status when a violation is present (12.2), and presence in any folder is never permission to publish (principle 2).
+
+---
+
+## 8. Layer 6: Ledger
+
+Layer 6 answers what happened, in a form that cannot be quietly rewritten. Its internal families bind at Tier 1, its tooling families at Tier 2, and its boundary families at Tier 3 (8.1, 12.1).
+
+### 8.1 Log families
+
+A ledger is a set of append only log families. A log family is a sequence of entries sharing one schema, one surface, and one custody rule. Two groups are defined.
+
+**Internal families** record what happened inside the brain:
+
+| Family | Records | Defined by |
+|---|---|---|
+| Operations log | General events: checks run, sweeps, imports, amendments applied | This section |
+| Decision family | One record per resolved decision, including genesis and adoptions | DEFER/1.0 section 12, and 8.6 |
+| Inference call family | One entry per inference call attempt, completed or refused | CONFIDE/1.0 section 8 |
+| Tooling families | Session anchors and the artifact ledger | TRACE/1.0 sections 6 and 8, and 8.7 |
+
+**Boundary families** record what crossed: the outbound and inbound ledgers of Layer 8, one pair per peer, per SPEAK/1.0 section 11.
+
+Tier scoping is explicit, because section 12.1 binds "the internal log families" at Tier 1. At Tier 1 the operations log and the decision family MUST exist and be operated, and the inference call family MUST exist whenever the brain performs any inference (CONFIDE/1.0 section 12.1). The tooling families bind at Tier 2 with TRACE/1.0 section 13.1; at Tier 1 their surfaces SHOULD exist empty, so that Tier 2 is an upgrade rather than a restructure. Boundary families bind at Tier 3.
+
+### 8.2 Append only semantics
+
+An entry, once written, MUST NOT be modified or deleted. A correction is a new entry that supersedes by identifier; a withdrawal is a new entry that tombstones. A family in which an entry has changed in place has stopped being a ledger: verification MUST treat the family as failed and MUST report it, and evidence drawn from a failed family is no evidence. In practice entries are new files or appended lines, and a version control diff showing modification of an existing entry is a red check.
+
+### 8.3 Coordination free identifiers
+
+Ledger entries MUST be minted coordination free: timestamp plus entropy or equivalent, mintable on any host with no knowledge of any other host. An implementation MUST NOT compute the next free sequence number, because two hosts computing it concurrently both get the same answer and one of them silently loses. The Phase 7 exit gate is the demonstration of this property under deliberate concurrency (13.1).
+
+### 8.4 Hash chaining
+
+An entry MAY carry the digest of the previous entry in its family. A family so chained is tamper evident end to end: rewriting any entry breaks every link after it.
+
+Chaining is REQUIRED for every boundary family and for any family whose chain head a peer attests to, because a peer's attestation is only as good as the chain beneath it (SPEAK/1.0 section 11). For internal families chaining is RECOMMENDED and is not required at Tier 1: within one brain, the append only rule, version control history, and DEFER/1.0's two sided reconciliation provide the tamper evidence, and a Tier 1 brain has no peer to prove a chain to. A family that declares chaining MUST verify it, and a broken link fails the family (8.2).
+
+### 8.5 Trusted time
+
+Every entry MUST carry a UTC timestamp from a declared time source. At Tier 1 the local clock is an acceptable declared source, and monotonicity within each family MUST be checked: an entry timestamped before its predecessor is a red check, because it is either a clock fault or a rewrite, and both demand the owner's attention. No external time attestation is required below Tier 3. At Tier 3 the boundary families gain cross attestation structurally: a signed receipt is a peer's statement of when it observed an utterance, and reconciliation of the two ledgers is the time audit.
+
+### 8.6 Decision records
+
+The decision family is the brain's memory of who decided what. Every decision record MUST carry the consequence classification, the resolving actor, the resolution, and the digest of what was approved, per DEFER/1.0 section 12. Recording binds at Tier 1: DEFER/1.0 section 15.1 requires a classified, recorded decision from the first act, and the decision family is where those records live.
+
+Two entries carry names. The genesis record is the family's first entry: the owner signed record of the brain's creation, classified K3 or above (RETAIN/1.0 section 10.2). Adoption records bind the Constitution and every other governing text to the SHA-256 of the adopted bytes, so that adopted is a checkable property of bytes rather than a memory (3.5).
+
+### 8.7 Session anchors and the artifact ledger
+
+The tooling families are defined by TRACE/1.0: session anchors by section 6, the artifact ledger by section 8. They are internal families and are held to the same append only and minting rules as every other family in this layer. Anchoring and sealing bind at Tier 2 (TRACE/1.0 section 13.1). At Tier 1 the surfaces SHOULD exist empty, and a Tier 1 brain that voluntarily anchors sessions records them in these families rather than inventing a parallel structure.
+
+### 8.8 Protected artifacts and deletion as an entry
+
+Deletion of a protected artifact is itself a ledger event: recorded, attributed, and refused to agent identities, per TRACE/1.0 sections 9.3 and 13.1, binding at Tier 2. The Layer 6 rule beneath it binds at every tier: no ledger entry is ever deleted (8.2), and an artifact that is absent with no deletion entry is detected by sweep as a vanished artifact, which is a red check.
+
+---
+
+## 9. Layer 7: Agency
+
+Layer 7 binds at Tier 2 (12.2). Normative body: DEFER/1.0, with RETAIN/1.0 section 2 governing agent state thresholds and RETAIN/1.0 section 4.6 the separation of knowing and acting, per the subsection citations in the table of contents. Body deferred; its requirements bind via the section 12 citations until this section is written. The layer's two fixed points are already normative elsewhere and are only pointed to here: agents draft and the owner decides (principle 9), and no agent identity approves a gate (12.2).
+
+---
+
+## 10. Layer 8: Boundary
+
+Layer 8 binds at Tier 3 (12.3). Normative bodies: SPEAK/1.0 for what crosses to another brain, CONFIDE/1.0 for what crosses to a model, TRACE/1.0 for what crosses into tooling, and RETAIN/1.0 sections 6 and 8 for the engagement of agent brains. Body deferred; its requirements bind via the section 12 citations until this section is written. The governing model is stated now because sections 12 and 16 depend on it: knowledge leaves a brain as a signed artifact and enters another by admission; the admitting brain owns its admitted copy and may pass signed artifacts onward under the same rule; brains relate as siblings under asymmetric agreements, never by nesting (RETAIN/1.0 section 3). Publishing a repository is not a crossing in this sense (12.1, 16.3).
+
+---
+
+## 11. Layer 9: Operations
+
+Layer 9 binds at Tier 3 (12.3). Body deferred; its requirements bind via the section 12 citations until this section is written. Layer 9 owns host roles, serializers and advisory state, leases, continuous verification, the inference broker as a component, egress invariants, enumeration and retention sweeps, and the conformance self test a peer can execute. One rule is stated now because every tier's checks already rely on it: exactly one host owns each mutable state root, and authority bearing state is decided on a serializer, never on an eventually consistent sync, because a lock that sync can duplicate is worse than no lock.
 
 ---
 
@@ -232,9 +504,9 @@ Each tier includes every requirement of the tier below it. A brain declares its 
 
 ### 12.1 Tier 1: Sovereign
 
-A Sovereign brain MUST implement Layers 0, 1, 2, and 3, and MUST implement the internal log families of Layer 6.
+A Sovereign brain MUST implement Layers 0, 1, 2, and 3, and MUST implement the internal log families of Layer 6 (8.1).
 
-A Sovereign brain is owned, structured, and logged, and does not exchange knowledge with other brains.
+A Sovereign brain is owned, structured, and logged. It MUST NOT exchange knowledge with another brain: no utterance emitted, no record admitted. Exchange requires Layer 8 and binds at Tier 3, and an exchange performed by a brain claiming Tier 1 is an ungoverned crossing that voids the claim until the owner records the crossing and corrects the claim. Publishing a brain repository, or offering one as a template, is not knowledge exchange in the sense of SPEAK/1.0: nothing is admitted, no receiving brain signs, and no peer relationship is created. Exchange is admission: a signed artifact crossing under an agreement, admitted by a receiving brain that then owns its admitted copy (sections 10 and 16.3).
 
 A Sovereign brain that performs any language model inference over its own content MUST additionally satisfy CONFIDE/1.0 section 12.1 for Tier 1: it MUST maintain an inference provider registry and MUST record every call in an append only ledger. Cataloging is required at the lowest tier, because a brain that cannot say what it has sent, and where, is not a brain the owner controls.
 
@@ -244,7 +516,7 @@ A Sovereign brain MUST satisfy POLARIS/1.0 section 15.1 for Tier 1. It MUST decl
 
 A Sovereign brain MUST satisfy DEFER/1.0 section 15.1 for Tier 1. It MUST declare its owner, define its roles, classify every act by consequence class before execution, and record every decision in the ledger. A Tier 1 brain is permitted to delegate nothing and may have the owner decide everything. What is not permitted is acting without a classified, recorded decision.
 
-A Sovereign brain MUST NOT contain another brain within its records, and MUST NOT delegate the creation of a brain. These two prohibitions bind at every tier, per RETAIN/1.0 section 13.1. A Tier 1 brain has no other RETAIN obligations, because agent state thresholds presuppose the enforced classification of Tier 2.
+A Sovereign brain MUST NOT contain another brain within its records, and MUST NOT delegate the creation of a brain. These two prohibitions bind at every tier: they are absolute requirements of RETAIN/1.0's Conformance clause, stated in RETAIN/1.0 sections 3 and 10.1, and they admit no tier scoping. RETAIN/1.0's tiered conformance begins at Tier 2 (RETAIN/1.0 section 13.1), so a Tier 1 brain has no other RETAIN obligations: agent state thresholds presuppose the enforced classification of Tier 2.
 
 ### 12.2 Tier 2: Governed
 
@@ -284,7 +556,9 @@ A Federated brain MUST publish a conformance self test that a peer can execute a
 
 ## 13. Establishment Workflow
 
-### 13.1 The fourteen phases
+### 13.1 The fifteen phases
+
+Fifteen phases: twelve numbered 0 through 11, plus three inserted phases. Phases 8a and 8b extend Phase 8 with the DEFER/1.0 and RETAIN/1.0 mechanics, and 9a extends Phase 9 with agent brain engagement. The letter suffixes keep the original numbering stable in citations and curricula.
 
 | Phase | Name | Exit gate | Tier |
 |---|---|---|---|
@@ -304,6 +578,14 @@ A Federated brain MUST publish a conformance self test that a peer can execute a
 | 10 | Operate | Self test green on two hosts, single owner state proven | 3 |
 | 11 | Federate | Key rotation and revocation exercised without data loss | 3 |
 
+Phase and tier interact by one rule: a phase's exit gate exercises the mechanics of the layers its tier includes, and nothing above them. Two apparent contradictions are resolved explicitly.
+
+**The Phase 4 preservation gate at Tier 1.** Approval gates are Layer 4 mechanics and bind at Tier 2. The preservation gate is not one of them. It is the Layer 2 and Layer 3 structural property of sections 4.8 and 5.6: raw bytes held unmodified under a provenance record, verified by a check that recorded digest equals present bytes. A Tier 1 brain enforces preservation by that check, and the check failing blocks promotion of anything derived from the source. No approval routing, belief evaluation, or stage machinery is required at Tier 1.
+
+**Phase 7 at Tier 2 while Layer 6 binds at Tier 1.** The internal log families, append only semantics, coordination free minting, and decision records of sections 8.1, 8.2, 8.3, and 8.6 bind from Phase 0 at Tier 1: DEFER/1.0 requires a recorded decision from the first act, and section 12.1 requires the internal families. Phase 7 does not introduce the ledger. It proves the ledger under deliberate concurrency and hardens it, adding hash chaining on every family a peer will later attest to (8.4).
+
+**The Phase 2 scaffold self test.** The exit gate's self test MUST assert, at minimum: every domain manifest is discoverable by the declared enumeration (4.3); every scratch surface is declared and excluded (4.7); no credential artifact is present in the working set or its history (TRACE/1.0 section 10.5); quarantine and scratch surfaces are excluded from knowledge; exactly one mutable state root exists; declaration time POLARIS rejections fire on seeded fixtures (POLARIS/1.0 section 15.1); and a harness record exists for the executing host wherever a harness operates (TRACE/1.0 section 4.1). The reference implementation carries the executable form of this test as data (section 16), and that form is the reference definition until this list is expanded at lock.
+
 ### 13.2 Individual track
 
 *(to be written.)*
@@ -322,12 +604,81 @@ Semantic versioning applies to the specification. MAJOR when a conformant implem
 
 Substantive changes proceed by RFC with a 30 day comment period. MAJOR changes require a two thirds supermajority of listed authors.
 
+**Draft status.** While Status is Draft, the 30 day comment period and the supermajority requirement above are suspended. The amendment channel while Status is Draft is the defect docket to RFCs loop operated through the reference implementation (section 16): a defect found in implementation is filed against the specification, routed as an RFC, and resolved by author ruling, with the resolving change recorded in the specification's history. Semantic versioning applies to Draft changes unchanged.
+
+**Lock.** BLUEPRINT/1.0, POLARIS/1.0, DEFER/1.0, CONFIDE/1.0, TRACE/1.0, and RETAIN/1.0 lock together at the release of the d7r conformance tooling (section 16). SPEAK/1.0 is deferred and locks separately at a later version. At the lock commit, every cross specification citation in this document is converted to a digest pinned citation naming the cited specification's content digest at lock. Until lock, citations are by name, version, and section number, and a citation made stale by a companion's renumbering is a defect to file, not a silent breakage to tolerate.
+
 ---
 
 ## 15. Registry
 
-*(to be written.)*
+Deferred; nothing is registered while Status is Draft. When written, this section will hold the identifier registry of the protocol set: the specification names and versions of 1.1.1, the schema identifier namespace of Appendix A, the requirement identifier prefixes minted into the specifications (BP, PL, DF, CF, TR, RT, SP), the stable failure class identifiers that conformance fixtures key against, and the reserved values of the controlled vocabularies this document defines. It will register identifiers, never brains: a brain is constituted by its signed Charter, and no central registration is required for a brain to exist or to claim a tier.
+
+---
 
 ## 16. Reference Implementation
 
-*(to be written.)*
+Two artifacts constitute the reference implementation. The **Governed Brain Starter** is a public template repository: a complete brain tree with a charter template, constitution, POLARIS element registry, topology, schemas, record templates, seeded fixtures, and a conformance register, published for instantiation. **d7r-cto** is the conformance tooling and register: the command line tool that executes the checks this specification family requires, the register that maps every requirement to its route and status, and the defect docket that is the Draft amendment channel (section 14).
+
+### 16.1 A template is not a brain
+
+Conformance is a property of a signed instantiation, never of a repository. The public repository is a reference template. It claims no tier, and no conformance language in it attaches to a clone. An unsigned clone claims nothing: its charter carries an unsigned sentinel, its checks fail closed on that sentinel, and every check that requires a signature is red until an owner signs. A brain comes into existence when an owner signs its Charter (Phase 0), and every conformance claim dates from that signature. A clone, mirror, or template instantiation that has not been signed is a folder holding a template, whatever its history says.
+
+### 16.2 Enforcement roadmap
+
+The signed reference instantiation claims Tier 1, enforced by the repository's checks as data and the d7r command line tool. The agent tiers follow on a planned roadmap: Tier 2 adds the d7r agent as the enforcement layer (broker, session anchoring, sealing, runtime gates), and Tier 3 adds a peer. Each is designed as an additive upgrade to the same tree, never a restructure, and no tier is claimed before its enforcement exists.
+
+### 16.3 Fixture peers are sibling repositories
+
+A fixture brain used to exercise SPEAK/1.0 MUST be a sibling repository. It MUST NOT live inside the reference brain's records, per the absolute non nesting requirement of RETAIN/1.0 (Conformance clause; section 3): a brain contained within another brain is not a fixture of exchange, it is a violation of the thing being tested. The federation model the fixtures exercise is the specification's own: a brain uses its tools to create signed artifacts; a sibling brain admits them and owns its admitted copies; and it may pass signed artifacts onward under the same rule. Sibling repositories under agreements, never nesting. Publication of the template repository itself is not exchange (12.1).
+
+---
+
+## Appendix A: Schema directory
+
+Normative machine readable schemas live at `schema/v1/`, one JSON Schema per contract, each identified by a stable `$id` under `https://blueprint-spec.dev/schema/v1/`. The directory defines eighteen schemas:
+
+| Schema | Contract | Defined by |
+|---|---|---|
+| `brain-charter` | The Layer 0 Charter: identity, owner, keys, lineage, tier and layer claim, inference and tooling declarations | This document, section 2 |
+| `polaris-declaration` | The Layer 0 POLARIS declaration and its element kinds | POLARIS/1.0 |
+| `role` | A named position that holds authority envelopes | DEFER/1.0 section 3 |
+| `authority-envelope` | A bounded region of decision space on four axes | DEFER/1.0 section 4 |
+| `delegation-grant` | A signed instrument conferring an envelope, chain terminating in a human signature | DEFER/1.0 section 8 |
+| `decision-request` | The proposal of an act requiring a decision, classified before routing | DEFER/1.0 section 6 |
+| `decision-record` | The Layer 6 entry for a resolved decision | DEFER/1.0 section 12 |
+| `inference-provider` | One inference endpoint under one set of terms | CONFIDE/1.0 section 3 |
+| `inference-authorization` | An owner grant binding actor, providers, and purposes | CONFIDE/1.0 section 4 |
+| `inference-call` | One call ledger entry, hashes never prompt text | CONFIDE/1.0 section 8 |
+| `harness` | One agent harness per host, with declared artifact roots | TRACE/1.0 section 4 |
+| `session-anchor` | The brain owned ledger entry for one harness session | TRACE/1.0 section 6 |
+| `artifact-seal` | One artifact ledger entry per sealed artifact, refusal, or deletion | TRACE/1.0 section 8 |
+| `agent-brain` | The threshold classification of an agent state store | RETAIN/1.0 section 2 |
+| `mandate` | The engagement instrument between principal and agent brain | RETAIN/1.0 section 6 |
+| `peer-agreement` | The bilateral exchange contract | SPEAK/1.0 section 3 (body pending; see section 14 on SPEAK deferral) |
+| `utterance` | The signed transfer unit | SPEAK/1.0 section 5 (body pending) |
+| `receipt` | The listener's signed answer | SPEAK/1.0 section 6 (body pending) |
+
+Two record schemas are specified here and are not yet authored in `schema/v1/`. The Phase 3 schema check requires both; authoring them is reference implementation work fed back into this directory.
+
+**`record`**, the Layer 3 frontmatter contract for an ordinary record (5.1): required `type` (from the vocabulary registry) and `id` (coordination free, 5.3); required `created` (UTC) and `authorship` (5.5) for promotion past capture; optional `sensitivity`, `visibility`, custody floor properties (5.6), and gate properties, each validated against its controlled vocabulary where present. A domain manifest (4.2) is a record of type `domain-manifest` carrying an `automation` property, validated under this schema plus its vocabulary entries; it needs no separate schema.
+
+**`source-provenance`**, the preservation record of 4.8 and 5.6: required source identifier, `sha256` of the raw bytes, byte count, capture date, capture method, and the anchored path of the preserved artifact; optional consent fields for third party material.
+
+---
+
+## Appendix B: Profile: individual
+
+Non normative. A starting configuration for one person, maintained at `profiles/individual.md` in this repository. A profile is a configuration, not a requirement: every element is intended to be changed by the owner.
+
+---
+
+## Appendix C: Profile: organization
+
+Non normative. A starting configuration for a company, team, or other legal entity, maintained at `profiles/organization.md` in this repository.
+
+---
+
+## Appendix D: Conformance test suite
+
+Deferred. The conformance test suite ships as data in the reference implementation (section 16): assertions and seeded violation fixtures keyed to stable failure class identifiers, executed by the conformance tooling. This appendix will normatively enumerate the assertion set at lock.

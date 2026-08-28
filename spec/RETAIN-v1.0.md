@@ -9,7 +9,7 @@
 **Repository:** `<repo>/blueprint`
 **Schema:** `schema/v1/`
 **License:** Apache 2.0
-**Requires:** BLUEPRINT/1.0 Tier 2, DEFER/1.0, POLARIS/1.0
+**Requires:** BLUEPRINT/1.0 (Tier 1 for the section 13.1 Tier 1 posture, Tier 2 for full conformance), DEFER/1.0, POLARIS/1.0, TRACE/1.0, CONFIDE/1.0, SPEAK/1.0 (deferred; SPEAK locks later than this document, and citations into it bind at SPEAK lock)
 **Motto:** An agent that learns is an agent that retains. Non-normative.
 
 ---
@@ -71,7 +71,7 @@ Four requirements are absolute and admit no configuration. A brain MUST NOT be c
    6.2 Loyalty order publication
    6.3 Engagement history
    6.4 Disclose and decide
-   6.5 Admission of an agent brain is a decision
+   6.5 Admission of agent output
 7. What Is the Agent's and What Is a Copy
    7.1 Method, calibration, judgment
    7.2 The principal's material as expiring copies
@@ -159,7 +159,7 @@ A **domain** is state that persists and is owned by the principal. An agent doma
 
 A **brain** is state that persists and is owned by a party other than the principal. It has its own Charter, its own POLARIS, its own ledger, and its own refusals. It is a peer.
 
-A conformant brain MUST classify every persistent agent state store as exactly one of these three and MUST record the classification.
+A conformant brain MUST classify every agent state store as exactly one of these three and MUST record the classification.
 
 ### 2.2 The persistence test
 
@@ -179,13 +179,15 @@ The refusal test as stated is a question about intent, and intent is not auditab
 
 **A store whose signing key is held by the principal is a domain.** If the principal holds the key, the principal can sign an utterance the agent did not make, including an utterance withdrawing a refusal. Under those conditions the agent's refusals have no force and its declared purpose is a document the principal may rewrite.
 
-A brain MUST hold its own signing key. A brain whose key is held by another party MUST be reclassified as a domain of that party, and its Charter, POLARIS declaration, and refusal set MUST be reclassified as directive artifacts of that party under TRACE section 10.1.
+A brain MUST hold its own signing key. A brain whose key is held by another party MUST be reclassified as a domain of that party, and its Charter, POLARIS declaration, and refusal set MUST be reclassified as directive artifacts of that party under TRACE section 10.1. This reclassification is a discovery, not a demotion: a store that fails the key holding test was never a brain, whatever it was called. See section 2.5.
 
 This test is the operative one. Where the three preceding tests disagree with it, it governs. A brain the parent can sign for is a folder with aspirations, and the corollary is worth stating plainly: **the refusal a principal cannot overrule is the only evidence that an agent's brain is real.**
 
 ### 2.5 Promotion and its cost
 
 Promotion from residue to domain, or from domain to brain, is permitted. Demotion of a brain to a domain is not, because it would require the acquisition of another party's key.
+
+Reclassification under section 2.4 is distinct from demotion, and RT-05 names only the second. Demotion converts a store that holds its own key into a domain, and cannot be performed without taking the key. Reclassification corrects the record of a store whose key another party already held: no ownership is removed, because none existed. The first is forbidden. The second is mandatory.
 
 Promotion to a brain creates a party. The costs are not incidental and MUST be declared in the promotion decision:
 
@@ -235,7 +237,7 @@ Third, creation is owner only under section 10.1, so the population of brains is
 
 A shared mutable state root among agent domains is permitted, because domains are all part of one brain and a brain may organize its own topology freely. A shared mutable state root between brains is forbidden.
 
-Therefore a shared store that serves several agent domains is legal until any participant is promoted to a brain, at which point it MUST be dissolved. Dissolution replaces the shared store with pairwise exchange: shared memory becomes utterances that each party admits into its own records, and a shared question queue becomes utterances with receipts.
+Therefore a shared store that serves several agent domains is legal until any participant is promoted to a brain, at which point it MUST be dissolved. Dissolution replaces the shared store with pairwise exchange: shared memory becomes signed utterances that each party admits into, and thereafter owns in, its own records, and a shared question queue becomes utterances with receipts.
 
 A brain that operates a shared agent state store MUST record it as a promotion blocker, listing the domains that participate. The cost of dissolution is a legitimate reason to decline a promotion, and it is far cheaper to know about before the promotion than after.
 
@@ -313,7 +315,9 @@ A principal MUST declare the placement of every agent brain it engages and MUST 
 | Agent owner's infrastructure | C3 | By construction | The ordinary case for an external agent |
 | Vendor hosted trained agent | C3 or C4 | By construction | The principal's material sits on vendor disk |
 
-Custody classes are defined by CONFIDE section 4 and are used here unchanged. Chains take the weakest class, and an undeclared placement is C4.
+Custody classes are defined by CONFIDE section 2 and are used here unchanged. Chains take the weakest class, and an undeclared placement is C4.
+
+A store placed at C1 or C2 may still be a brain. Section 2.4 turns on who holds the signing key, not on filesystem reachability: a principal with access to the host can read the store, and still cannot sign for it. What C1 placement removes is enforcement. The agent's nondisclosure under section 4.4 is a policy the principal's owner is physically able to breach, and a breach is a failure of the principal under RT-13, not a reclassification of the store. A mandate for an agent brain placed at C1 or C2 MUST record that the agent's nondisclosure is by policy rather than by construction, so the residual exposure is declared rather than assumed away.
 
 ### 5.3 The inspectability tradeoff
 
@@ -347,6 +351,8 @@ A mandate MUST NOT contain an authority envelope. Authority in the principal is 
 
 An agent brain MUST publish its loyalty order to a principal before admission, and the principal MUST evaluate it against its own.
 
+The loyalty order published is the agent brain's own declaration under POLARIS section 6.1: a total, ordered list of beneficiaries, with ties forbidden. Its record form at admission is the loyalty disclosure of the mandate in `schema/v1/`, which carries the order, the principal's position in it, and the conflict decision where one is required.
+
 Where the agent's order ranks any party above the principal, the engagement carries a declared conflict. POLARIS section 6.4 applies: disclosure without disqualification is not a control, so the principal MUST decide whether the conflict disqualifies and MUST record the decision. Proceeding is conformant. Proceeding without a recorded decision is not.
 
 An agent brain serving multiple principals cannot rank all of them first. A principal that has not read the order has agreed to an unknown position in it.
@@ -361,11 +367,13 @@ A principal MAY require exclusivity as a term of the mandate. A principal MAY de
 
 Sections 6.2 and 6.3 are admission time controls and produce a recorded decision, never an automatic proceed. Admission of an agent brain is a decision request under DEFER, classified at minimum K3 because it establishes a continuing boundary crossing, and K4 where the mandate names a role holding an envelope over constitutional acts.
 
-### 6.5 Admission of an agent brain is a decision
+### 6.5 Admission of agent output
 
-The admission gate for records under Blueprint Layer 8 applies unchanged to everything an agent brain emits. Nothing in a mandate exempts an agent's output from admission, and a mandate MUST NOT declare an agent's utterances pre-admitted.
+The admission gate for records under Blueprint Layer 8 applies unchanged to everything an agent brain emits. Nothing in a mandate exempts an agent's output from admission, and a mandate MUST NOT declare an agent's utterances pre-admitted. Admission of the agent brain itself is the separate, one time decision of section 6.4; this section governs the records it emits thereafter.
 
 An agent that works closely with a principal over a long period produces output the principal comes to trust. That trust is a reason to widen the projection, and it is never a reason to bypass admission, because the admission record is the only place the principal's own classification is applied to the agent's assertions.
+
+Admission transfers ownership of a copy. An assertion the principal admits becomes the principal's own record, held under the principal's classification, with the agent's signed provenance traveling with the artifact. The agent brain retains no claim over the admitted copy. The principal may pass the signed artifact onward to its own peers, and that transfer is the same act performed one hop later: each admitting brain owns its admitted copy, and brains remain siblings under agreements, never nested.
 
 ---
 
@@ -525,6 +533,8 @@ An agent brain whose owner is retired without an effective disposition is an orp
 
 An orphan brain MUST be reported by every principal that engaged it, MUST have all outstanding copies expired immediately, and MUST NOT be treated as available for continued engagement. A principal MUST NOT assume an orphan brain's copies have expired without evidence, since the party that would honor the expiry no longer exists.
 
+The orphan report is a Layer 6 record in the reporting principal's own engagement ledger, attached to the mandate, and it MUST be raised to the principal's owner as a decision request under DEFER, because expiring the outstanding copies and terminating the engagement are acts in the principal. There is no shared registry of orphans. Each principal records its own, and a principal that learns of the orphaning from a peer's utterance MUST verify and record it itself rather than admitting the report as fact.
+
 Orphan brains are a conformance failure of the brain that created the agent, not of the principals that engaged it.
 
 ---
@@ -553,7 +563,7 @@ The controls that actually operate are structural and applied before the engagem
 
 **Exclusivity.** A term of the mandate, enforced by contract and by the agent's own refusals, not by the principal's monitoring.
 
-A principal MUST NOT rely on monitoring for this class of exposure, and SHOULD state in the mandate which of the three controls applies. An engagement with none of them is an engagement in which cross domain transfer is accepted, and the honest thing is to record that it was accepted rather than to describe it as prevented.
+A principal MUST NOT rely on monitoring for this class of exposure, and MUST state in the mandate which control applies. The declarable states are four, not three: the three controls above, and **accepted**, meaning the engagement proceeds with no structural control and the cross domain transfer knowingly accepted. Accepted is a legitimate declaration and MUST be recorded as accepted rather than described as prevented. What is not conformant is silence. An engagement that declares no state has not accepted the exposure, it has hidden it.
 
 ---
 
@@ -563,7 +573,7 @@ A principal MUST NOT rely on monitoring for this class of exposure, and SHOULD s
 |---|---|
 | RT-01 | A store described as a brain whose signing key is held by another party |
 | RT-02 | A brain contained within another brain's records |
-| RT-03 | A persistent agent state store with no threshold classification |
+| RT-03 | An agent state store with no threshold classification |
 | RT-04 | Residue promoted by declaration without persistence |
 | RT-05 | A brain demoted to a domain |
 | RT-06 | Two agents sharing one brain |
@@ -608,9 +618,11 @@ A principal MUST NOT rely on monitoring for this class of exposure, and SHOULD s
 
 ### 13.1 By tier
 
-RETAIN requires BLUEPRINT/1.0 Tier 2, because agent domains presuppose enforced classification and a ledger.
+Full RETAIN conformance requires BLUEPRINT/1.0 Tier 2, because agent domains presuppose enforced classification and a ledger. A Tier 1 posture nonetheless exists, and it is the clause BLUEPRINT section 12.1 cites and the posture a Tier 1 instantiation claims.
 
-**Tier 2.** A brain MUST classify every persistent agent state store as residue, domain, or brain, and MUST apply the key holding test. It MUST hold agent domain charters as A0 Directive artifacts. It MUST record every shared agent state store as a promotion blocker. It MUST classify brain creation at K3 or K4 and MUST NOT delegate it. It MUST declare a disposition for every agent brain it creates.
+**Tier 1.** The structures this document defines are present, and the four absolute requirements of the Conformance section bind in full. A Tier 1 brain MUST classify every agent state store as residue, domain, or brain, MUST record the classification, and MUST hold zero stores classified as brains. Brain creation and agent brain admission are refused at Tier 1, because the obligations they trigger belong to Tier 2 and Tier 3. A store that cannot be classified is unclassified and fails closed as RT-03.
+
+**Tier 2.** A brain MUST classify every agent state store as residue, domain, or brain, and MUST apply the key holding test. It MUST hold agent domain charters as A0 Directive artifacts. It MUST record every shared agent state store as a promotion blocker. It MUST classify brain creation at K3 or K4 and MUST NOT delegate it. It MUST declare a disposition for every agent brain it creates.
 
 **Tier 3.** A brain that engages any agent brain MUST additionally hold a mandate, both registrations under section 8, a published loyalty order and engagement history recorded at admission, a declared expiry on all copies held by the agent, and a projection rather than a read permission. It MUST evaluate its own refusals against admitted material and MUST declare which cross domain control applies.
 
@@ -618,7 +630,7 @@ A Tier 2 brain that engages no agent brains, only domains, is conformant with se
 
 ### 13.2 Health invariants
 
-1. Every persistent agent state store carries a threshold classification
+1. Every agent state store carries a threshold classification
 2. No store classified as a brain has its key held by another party
 3. No brain is located within another brain's records
 4. Every shared agent state store is recorded with its participants
@@ -668,12 +680,14 @@ A brain claiming RETAIN conformance MUST publish results for the following.
 
 Items 3, 4, 6, 7, 9, 11, 13, 18, 21, 22, and 23 are seeded failure tests and MUST be run rather than reasoned about. A refusal that has never been exercised is unfalsified rather than proven, per POLARIS section 4.5.
 
-Items 11, 14, and 17 MUST be observed rather than attested, per TRACE evidence grades. An agent brain's assertion that it honored an expiry is the weakest possible evidence of the one thing the principal most needs to know, and section 11 establishes that stronger evidence may not be obtainable. Where it is not, the mandate MUST record that the expiry is attested rather than observed, so the residual exposure is visible rather than assumed away.
+Items 14, 15, and 17 MUST be observed rather than attested, per TRACE evidence grades. An agent brain's assertion that it honored an expiry is the weakest possible evidence of the one thing the principal most needs to know, and section 11 establishes that stronger evidence may not be obtainable. Where it is not, the mandate MUST record that the expiry is attested rather than observed, so the residual exposure is visible rather than assumed away.
 
 ---
 
 ## 14. Versioning and Governance
 
 RETAIN follows the Blueprint versioning rules. The four absolute requirements in the Conformance section are constitutional under DEFER: amending them is K4, owner only, and never delegable.
+
+The dependency on SPEAK/1.0 declared in the header is deferred. SPEAK locks later than this document, and this document's citations into SPEAK become digest pinned at the lock commit rather than now. The requirements here that cite SPEAK bind as written against the SPEAK version current at lock.
 
 The threshold definitions in section 2 and the key holding test in section 2.4 MUST NOT be relaxed in a minor version, since every other guarantee in this document derives from them.

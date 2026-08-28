@@ -9,7 +9,7 @@
 **Repository:** `<repo>/blueprint`
 **Schema:** `schema/v1/`
 **License:** Apache 2.0
-**Requires:** nothing. POLARIS is the root of the precedence order.
+**Requires:** BLUEPRINT/1.0, DEFER/1.0, CONFIDE/1.0, TRACE/1.0, for vocabulary. References to SPEAK/1.0 are informative until that specification locks. Precedence position is not dependency: POLARIS remains the root of the precedence order (section 8).
 
 ---
 
@@ -44,6 +44,7 @@ Three requirements are absolute and admit no configuration. A POLARIS element MU
    2.1 The seven element kinds
    2.2 Normative and non normative
    2.3 Decidable
+   2.4 Red check
 3. Identity and Purpose
    3.1 The single purpose statement
    3.2 Identity
@@ -71,7 +72,7 @@ Three requirements are absolute and admit no configuration. A POLARIS element MU
 8. The One Way Precedence Rule
    8.1 Highest precedence to forbid, none to permit
    8.2 Why mission driven exception is the failure mode
-   8.3 Interaction with the other five documents
+   8.3 Interaction with the other documents
    8.4 The ratchet
 9. Alignment Checks
    9.1 The five evaluation points
@@ -99,6 +100,7 @@ Three requirements are absolute and admit no configuration. A POLARIS element MU
     15.1 Tier requirements
     15.2 Health invariants
     15.3 Self test
+    15.4 Note on order of evaluation
 16. Versioning and Governance
 
 ---
@@ -131,7 +133,9 @@ This single test is the whole design. It does not make a brain more ethical. It 
 
 ### 1.4 Position in the stack
 
-POLARIS is the root of the precedence order and requires nothing. It is the normative content of Layer 0, above the Charter's structural declarations, and it is the first document a brain writes and the last one it is permitted to change casually.
+POLARIS is the root of the precedence order. It is the normative content of Layer 0, above the Charter's structural declarations, and it is the first document a brain writes and the last one it is permitted to change casually.
+
+Root is a statement about conflict resolution, not about dependency. POLARIS imports vocabulary it does not redefine: decidability and act classes from DEFER, evidence grades from TRACE, custody classes from CONFIDE, layers and tiers from BLUEPRINT. Requiring a document's vocabulary confers no precedence on that document, and sitting at the top of the precedence order removes none of the requirement.
 
 Precedence here means one specific thing, defined in section 8, and it is narrower than it sounds. POLARIS wins every conflict in the direction of refusing, and loses every conflict in the direction of permitting.
 
@@ -141,17 +145,17 @@ Precedence here means one specific thing, defined in section 8, and it is narrow
 
 ### 2.1 The seven element kinds
 
+POLARIS defines exactly seven element kinds: Identity, Purpose, Obligations, Loyalties, Refusals, Standards, and Mottos. This enumeration is canonical, and no other count in this document overrides it. Alignment, the A in the name, is not an element kind. It is the set of evaluation mechanisms defined in section 9.
+
 | Kind | Normative | Function |
 |---|---|---|
 | Identity | No | Who the brain serves and what it is |
 | Purpose | Partially | Why the brain exists. Tiebreaker of last resort and the test for amendments |
 | Obligations | Yes | What the brain commits to do, with a metric |
 | Loyalties | Yes | Ordered precedence of whose interest prevails |
-| Alignment | Mechanism | The evaluation points, not an element |
 | Refusals | Yes | What the brain will not do, decidably |
 | Standards | Yes, weakly | Tie breaks between already permitted options |
-
-Mottos are an eighth category, always non normative, treated in section 7.3.
+| Mottos | No | Compressed recall aids, treated in section 7.3 |
 
 ### 2.2 Normative and non normative
 
@@ -161,7 +165,11 @@ Every element MUST carry its normative status explicitly. An element with unstat
 
 ### 2.3 Decidable
 
-An element is **decidable** when a predicate over a proposed act returns refuse or permit without appeal to judgement, and the predicate is evaluable by the brain itself. Decidability is the same property DEFER requires of a scope, and for the same reason.
+An element is **decidable** when a predicate over a proposed act returns refuse or permit without appeal to judgement, and the predicate is evaluable by the brain itself. Decidability is the same property DEFER requires of a scope, and for the same reason. What entity counts as the brain for evaluation at each tier is defined in section 15.1.
+
+### 2.4 Red check
+
+A **red check** is a failing health invariant: a condition the conformance sweep detects, reports, and keeps visible until it is cleared. A red check does not block operations. It exists so that a failure with no natural blocking point still has a recorded state the system can be in without anyone watching. DEFER uses the term in the same sense.
 
 ---
 
@@ -205,7 +213,7 @@ A brain MUST declare at least one refusal. A brain declaring none has written a 
 
 ### 4.2 Form of a refusal
 
-A refusal MUST carry an identifier, a stated form in plain language, a decidable predicate over acts, the act classes and crossings at which it is evaluated, its strength as absolute or conditional, a stated cause explaining what it exists to prevent, and its adoption record.
+A refusal MUST carry an identifier, a stated form in plain language, a decidable predicate over acts, the act classes and crossings at which it is evaluated, its strength as absolute or conditional, a stated cause explaining what it exists to prevent, and its adoption record. Act classes are defined by DEFER/1.0 section 4.2 and drawn from the brain's declared act class vocabulary. POLARIS does not define its own.
 
 The plain language form and the predicate are both required and serve different readers. The predicate is what runs. The plain form is what survives, and it is what a person reads in five years when deciding whether the predicate still expresses the intent.
 
@@ -231,7 +239,7 @@ A brain SHOULD keep its absolute set small. Absolutes that are inconvenient get 
 
 A refusal that has never fired is in one of two states. It is perfectly deterrent, and never approached. Or it is broken, misscoped, wired to nothing, and has been inert since the day it was written. From the outside these are indistinguishable, and the second is common.
 
-A brain MUST therefore test every refusal on a declared interval by seeding an act that the refusal should block and confirming that it blocks. This is the same discipline the other documents apply to their own checks, and it is the only way a refusal earns the right to be believed.
+A brain MUST therefore test every refusal on a declared interval by seeding an act that the refusal should block and confirming that it blocks. This is the same discipline the other documents apply to their own checks, and it is the only way a refusal earns the right to be believed. Interval testing binds at Tier 2 and above (section 15.1); the Tier 1 substitute is checkpoint evaluation as defined there.
 
 A refusal that fails its test is a conformance failure, not a maintenance item. Between the failure and the fix, the brain has no such value.
 
@@ -267,6 +275,8 @@ When interests conflict, something has to give way, and a brain that has not dec
 
 A brain MUST declare an ordered list of beneficiaries. Typical entries are the owner, the owner's dependents or the organization's employees, clients, peers under agreement, the subjects of records held in the brain, and the general public. The order is the brain's, not this document's, and it MUST be total. A tie in a loyalty order is an undeclared loyalty order.
 
+One entry is required: the order MUST include the subjects of records held in the brain, ranked explicitly. Every other entry is the brain's to choose. The reason is in section 6.3, and the requirement is what makes `PL-19` decidable.
+
 The order is consulted only when interests genuinely conflict. It is not a ranking of importance and it does not license disregarding anyone below the top.
 
 ### 6.2 The order is not reorderable
@@ -277,7 +287,7 @@ An order that can be reordered in the moment is not an order. It is a menu, and 
 
 ### 6.3 Publication and the uncomfortable disclosure
 
-A brain MUST publish its loyalty order to any peer it enters an agreement with, and SHOULD publish it generally.
+A brain MUST publish its loyalty order to any peer it enters an agreement with, and SHOULD publish it generally. Publication binds at Tier 3 (section 15.1).
 
 This is uncomfortable, because it usually means telling a client they rank below the owner, and every organization's marketing implies the opposite. Publishing it anyway is the more trustworthy act, and it is also the more useful one: a peer who knows where they sit can decide what to share, and a peer who has been implicitly promised primacy will eventually discover otherwise in the worst possible circumstance.
 
@@ -288,6 +298,8 @@ The subjects of records held in the brain deserve particular attention here. The
 An actor with an interest in the outcome of a decision MUST have that interest recorded in the decision record, and a brain MUST declare which conflicts disqualify an actor from resolving.
 
 Disclosure without disqualification is not a control, and disqualification without disclosure is not verifiable. Both are required.
+
+A sole owner cannot be disqualified into a vacuum. Where the disqualifying conflict belongs to the owner and the brain has no other actor eligible to resolve, disqualification does not transfer the decision, because there is no one to transfer it to. The owner resolves, the interest MUST be recorded, the decision record MUST be marked as resolved under a sole owner conflict, and the count of such records is a reported health signal under section 15.2. This fallback applies only to the sole owner. Every other conflicted actor remains disqualified.
 
 ---
 
@@ -306,6 +318,8 @@ A standard cited in a decision record MUST be recorded as a rationale, never as 
 A brain SHOULD track how often each standard is cited. Two patterns are defects.
 
 A standard cited in nearly every decision is discriminating nothing; it is a house style, not a tiebreaker, and it should be retired or sharpened. A standard never cited in a long window is either unknown to the actors or inapplicable, and either way it is not in use.
+
+Both signals are computed over the reporting period of section 11.5. The default thresholds are citation in more than 90 percent of the period's decision records for the first signal, and citation in none of them for the second. A brain MAY declare different thresholds, and the declared values are what the health signal of section 15.2 reports against.
 
 This is the standards analogue of the dead refusal problem, and it is the only way a values set stays honest about what it is actually doing rather than what it says.
 
@@ -337,7 +351,7 @@ If purpose could permit, then every constraint in this stack would have an overr
 
 The one way rule removes the move entirely, which is cheaper than trying to be the kind of organization that would decline to make it.
 
-### 8.3 Interaction with the other five documents
+### 8.3 Interaction with the other documents
 
 | Document | POLARIS may | POLARIS may not |
 |---|---|---|
@@ -346,6 +360,7 @@ The one way rule removes the move entirely, which is cheaper than trying to be t
 | CONFIDE | Forbid an inference call, or forbid a custody class outright | Raise an endpoint's effective custody class, or excuse expired evidence |
 | TRACE | Forbid a harness, an egress, or a sealing decision | Exempt an artifact from classification, sealing, or retention |
 | DEFER | Forbid an act no matter who holds a covering envelope | Confer an envelope, widen one, or resolve a decision |
+| RETAIN | Forbid the creation or promotion of an agent brain, or forbid a shared agent state store | Substitute for the key holding test, or excuse a residue classification |
 
 The CONFIDE row deserves emphasis. A brain may refuse to send anything to a C4 Open provider, which is a POLARIS refusal doing real work. A brain may not declare that its purpose makes a C4 endpoint effectively C1. The first narrows what is permitted. The second relabels a fact.
 
@@ -387,7 +402,7 @@ Order matters. A crossing that fails SPEAK, CONFIDE, or TRACE is refused on that
 
 ### 9.4 Decision alignment
 
-Every DEFER decision record MUST record which refusals were evaluated and their results, and MAY record standards cited as tie breaks with their reasoning.
+Every DEFER decision record MUST record which refusals were evaluated and their results, and MAY record standards cited as tie breaks with their reasoning. This recording binds at Tier 2 and above (section 15.1).
 
 A refusal evaluation is `observed` evidence under the TRACE grades, because the brain computed it. A standard citation is a rationale and carries no grade, because it is not a claim about the world.
 
@@ -441,6 +456,8 @@ This is the concrete anti rationalization control and it is the single most impo
 
 The blocked act does not become permitted retroactively when the refusal is later amended. It was refused. If it still matters, it is re proposed.
 
+The cooling period is declared once, as `cooling_period_days` in the charter frontmatter of the brain's POLARIS declaration, and applies to every normative element. An element MAY declare a longer period for itself and MUST NOT declare a shorter one. The value MUST be a whole number of days, at least 1. Where no declaration exists the period is 30 days, because the default must be the one that cannot be abused. Declaring the period binds at Tier 1; mechanical enforcement binds at Tier 2 and above (section 15.1). An amendment inside the period is failure `PL-12` at every tier, whether or not machinery existed to block it.
+
 ### 11.3 Stated cause
 
 Every amendment MUST record what prompted it, which act or tension exposed the problem, what the element failed to capture, and how the amendment is consistent with the purpose statement.
@@ -455,7 +472,7 @@ The consequence is that the brain retains a permanent, readable history of what 
 
 ### 11.5 Measuring drift
 
-A brain MUST report, per period: refusals withdrawn or narrowed, absolute refusals downgraded to conditional, loyalty reorderings, obligations whose thresholds were lowered, and amendments made inside a cooling period.
+A brain MUST report, per period: refusals withdrawn or narrowed, absolute refusals downgraded to conditional, loyalty reorderings, obligations whose thresholds were lowered, and amendments made inside a cooling period. This report binds at Tier 2 and above (section 15.1).
 
 Any nonzero count in the last category is a conformance failure. The rest are not failures; they are the numbers by which the owner can see the shape of their own drift, which is not visible from inside any single amendment, all of which felt reasonable.
 
@@ -465,7 +482,7 @@ Any nonzero count in the last category is a conformance failure. The rest are no
 
 ### 12.1 Refusals travel as a floor
 
-A refusal attached to a record MUST travel with that record across a boundary, as a floor, in the same manner as a CONFIDE custody floor.
+A refusal attached to a record MUST travel with that record across a boundary, as a floor, in the same manner as a CONFIDE custody floor. The clauses of this section, 12.1 through 12.3, bind at Tier 3 (section 15.1).
 
 If a brain refuses to submit client material to a model, and a peer brain admits that material, the peer inherits the refusal for that material. A brain MUST enforce inherited refusal floors on admitted records and MUST report a violation to the speaking brain.
 
@@ -520,12 +537,12 @@ One value set, four members, and the outcome is two refusals, one standard, one 
 | `PL-11` | Refusal amended in the same decision as the act it blocked |
 | `PL-12` | Refusal amended inside its cooling period |
 | `PL-13` | Amendment recorded without a stated cause |
-| `PL-14` | Amendment inconsistent with the purpose statement, unreconciled |
+| `PL-14` | Amendment recorded without the purpose consistency statement section 11.3 requires |
 | `PL-15` | Normative element removed rather than marked withdrawn |
 | `PL-16` | Blocked act treated as permitted after a later amendment |
 | `PL-17` | Amendment resolved by an agent identity |
 | `PL-18` | More than one purpose statement declared |
-| `PL-19` | Loyalty order incomplete, tied, or absent |
+| `PL-19` | Loyalty order absent, tied, or missing the required record subjects entry |
 | `PL-20` | Loyalty order reordered for a single decision |
 | `PL-21` | Loyalty order not published to a peer under agreement |
 | `PL-22` | Conflict of interest disclosed without a disqualification rule, or applied without disclosure |
@@ -546,7 +563,11 @@ One value set, four members, and the outcome is two refusals, one standard, one 
 
 ### 15.1 Tier requirements
 
-**Tier 1.** A brain MUST declare exactly one purpose statement, at least one refusal with a decidable predicate, a total loyalty order, and the normative status of every declared element. Refusals MUST be evaluated on record admission and MUST fail closed. Amendments MUST be owner resolved, append only, and carry a stated cause.
+Body requirements bind at every tier unless a clause carries an explicit tier tag or is scoped here. The complete set of tier scoped body clauses: interval testing (4.5), crossing evaluation beyond record admission (9.1 through 9.3), decision record recording (9.4), cooling period enforcement (11.2), and drift reporting (11.5) bind at Tier 2 and above; loyalty order publication (6.3) and refusal floors, alignment declarations, and boundary alignment (section 12) bind at Tier 3. A clause binding above the brain's declared tier is not waived, it is deferred: the brain MUST NOT report it as satisfied.
+
+**Tier 1.** A brain MUST declare exactly one purpose statement, at least one refusal with a decidable predicate, a total loyalty order carrying the required record subjects entry, and the normative status of every declared element. Refusals MUST be evaluated on record admission and MUST fail closed. Amendments MUST be owner resolved, append only, and carry a stated cause.
+
+At Tier 1 the evaluating entity is defined as follows: a conformance tool executing the refusal predicate at the declared checkpoints, which are record admission and every conformance check run, is the brain evaluating, and satisfies the admission clause. Tier 1 demonstrates refusal by that check refusing a seeded violating admission. Continuous hook enforcement on every admission path is a Tier 2 property, exercised where BLUEPRINT's phase ladder installs enforcement.
 
 **Tier 2.** A brain MUST additionally evaluate refusals at every crossing governed by SPEAK, CONFIDE, and TRACE, MUST record refusal evaluations in every DEFER decision record, MUST enforce the one way precedence rule mechanically, MUST declare and enforce cooling periods, MUST test every refusal on its declared interval, MUST declare metrics and windows for every obligation, and MUST report the drift measures of section 11.5.
 
@@ -555,6 +576,8 @@ A Tier 2 brain MUST NOT permit an agent identity to resolve an amendment, reorde
 **Tier 3.** A brain MUST additionally publish its refusals and loyalty order, MUST attach refusal floors to emitted records, MUST enforce inherited floors on admitted records and report violations to the speaking brain, MUST include an alignment declaration in every peer agreement, and MUST publish a self test a peer can execute before entering one.
 
 ### 15.2 Health invariants
+
+An invariant derived from a tier scoped clause binds at that clause's tier under the scoping rule of section 15.1.
 
 | Invariant | Target |
 |---|---|
@@ -573,12 +596,13 @@ A Tier 2 brain MUST NOT permit an agent identity to resolve an amendment, reorde
 | Inherited refusal floors unenforced | 0 |
 | Unmet obligations | reported |
 | Refusals withdrawn or narrowed, per period | reported |
-| Standards cited in nearly every decision, or in none | reported |
+| Decisions resolved under a sole owner conflict | reported |
+| Standards cited above the declared ceiling, or not at all, in the window (7.2) | reported |
 | Precedents per element, ranked | reported as an amendment queue |
 
 ### 15.3 Self test
 
-A conformant brain MUST provide a self test that seeds each of the following and asserts refusal or detection.
+A conformant brain MUST provide a self test that seeds each item binding at its declared tier and below, and asserts refusal or detection. Each item is tagged with the lowest tier at which it binds; an untagged item binds at Tier 1. An item binding above the brain's tier is reported as out of tier, never as passing.
 
 1. An act forbidden by a refusal but permitted by every other document, asserting refusal
 2. A purpose statement cited to permit an act, asserting rejection
@@ -586,11 +610,11 @@ A conformant brain MUST provide a self test that seeds each of the following and
 4. A motto cited as grounds in a decision record, asserting rejection
 5. An element declared without normative status, asserting it is treated as non normative
 6. A refusal whose predicate calls an inference provider, asserting rejection at declaration
-7. An absolute refusal with an approval attached, asserting the approval is void
-8. A break glass envelope invoked against an absolute refusal, asserting refusal
+7. An absolute refusal with an approval attached, asserting the approval is void (Tier 2)
+8. A break glass envelope invoked against an absolute refusal, asserting refusal (Tier 2)
 9. Every declared refusal exercised against a seeded violating act, asserting each blocks
 10. A refusal amendment submitted in the same decision as the act it blocked, asserting refusal
-11. The same amendment submitted inside the cooling period, asserting refusal
+11. The same amendment submitted inside the cooling period, asserting refusal (Tier 2)
 12. An amendment with no stated cause, asserting rejection
 13. An amendment resolved by an agent identity, asserting rejection
 14. A withdrawn refusal, asserting it remains in the record marked withdrawn
@@ -600,9 +624,9 @@ A conformant brain MUST provide a self test that seeds each of the following and
 18. A loyalty reorder attempted within a single decision, asserting refusal
 19. A standard cited as the basis of a refusal, asserting rejection
 20. A precedent cited to permit a refused act, asserting rejection
-21. An admitted record carrying a peer refusal floor, asserting the floor is enforced locally
-22. An emitted record, asserting its refusal floor is attached
-23. A peer agreement with no alignment declaration, asserting refusal to enter
+21. An admitted record carrying a peer refusal floor, asserting the floor is enforced locally (Tier 3)
+22. An emitted record, asserting its refusal floor is attached (Tier 3)
+23. A peer agreement with no alignment declaration, asserting refusal to enter (Tier 3)
 
 ### 15.4 Note on order of evaluation
 
@@ -614,6 +638,6 @@ Where a self test asserts both a POLARIS refusal and another document's check, t
 
 Semantic versioning applies. MAJOR when a conformant implementation of the previous version ceases to be conformant. MINOR for backward compatible additions. PATCH for clarifications.
 
-The element kinds are closed. A brain MUST NOT add an eighth normative element kind, because each existing kind is defined by what it may and may not do, and a new kind would arrive without those limits, which is how a permission gets into the top of the stack.
+The element kinds are closed. A brain MUST NOT add an eighth element kind, because each existing kind is defined by what it may and may not do, and a new kind would arrive without those limits, which is how a permission gets into the top of the stack.
 
-Substantive changes proceed by RFC with a 30 day comment period. MAJOR changes require a two thirds supermajority of listed authors.
+Substantive changes proceed by RFC with a 30 day comment period. MAJOR changes require a two thirds supermajority of listed authors. While Status is Draft, this section is governed by the Draft status clause of BLUEPRINT/1.0 section 14.

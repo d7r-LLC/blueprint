@@ -46,6 +46,7 @@ Two requirements are absolute and admit no configuration. A harness artifact roo
    2.3 Harness session
    2.4 Observed and attested evidence
    2.5 Sealing
+   2.6 Write attribution
 3. Artifact Classes
    3.1 The six classes
    3.2 Classifying an artifact
@@ -181,6 +182,10 @@ A record whose grade is `attested` MUST NOT be relied upon as sole evidence for 
 
 **Sealing** is the operation of copying an artifact from a location the harness controls into a brain controlled append only store, computing its digest, and recording that digest in the artifact ledger. A sealed artifact is evidence. An unsealed artifact is a lead.
 
+### 2.6 Write attribution
+
+A write is attributed to a harness when the harness process, or any process it spawned, performs it. A command line tool the owner invokes directly is the owner writing, even where that tool is itself registered as a harness. The same tool invoked by a harness inherits the harness's identity, because attribution follows the invoker, not the binary. Where the invoker cannot be determined, the write MUST be attributed to a harness, since the permissive reading is the one an escape would exploit.
+
 ---
 
 ## 3. Artifact Classes
@@ -204,7 +209,7 @@ The class names are short nouns so they can be used in speech. Directive, Sessio
 
 Every artifact under a registered root MUST be assigned a class. Classification MAY be by pattern rule declared in the harness record, and every root MUST have a default class for unmatched paths.
 
-The default class for unmatched paths MUST NOT be A5. An unrecognized file in a harness root is far more likely to be a session, a copy, or derived state than telemetry, and misclassifying it as telemetry is the one error that both drops it from protection and permits it to leave.
+The default class for unmatched paths MUST be A1, A2, or A3. It MUST NOT be A5: an unrecognized file in a harness root is far more likely to be a session, a copy, or derived state than telemetry, and misclassifying it as telemetry is the one error that both drops it from protection and permits it to leave. It MUST NOT be A4 or A0 either: a default of A4 would exclude every unmatched file from sealing and backup with no one having verified it holds credentials, and a default of A0 would treat every unmatched file as authority.
 
 Where a path could belong to two classes, the stronger handling applies, in the order A4, A0, A1, A2, A3, A5.
 
@@ -226,6 +231,8 @@ A harness MUST be registered before it is used against brain content. An unregis
 
 Records are per harness and per host. The same tool on two machines is two records, because its roots, its version, and its egress settings differ per machine, and a single record would describe neither accurately.
 
+An enforcement agent is itself a harness under section 2.1, and it MUST register itself as a harness on install. Its record is authorized by the owner exactly as any other harness record, and its own approval authority over that record, and over every gate, is nil. No agent approves a gate, including the agent that enforces gates. A self registration the owner has not authorized leaves the record in `draft`, and a `draft` harness MUST NOT be used against brain content.
+
 ### 4.2 Declared artifact roots
 
 Each root declares its path, whether it is inside the brain folder, its default class, its class pattern rules, its expected growth, and whether it is sealed.
@@ -236,7 +243,7 @@ Roots MUST be declared using the path anchors required by BLUEPRINT Layer 1. A r
 
 Each harness record MUST declare, for each of the six classes, whether the harness transmits artifacts of that class to its vendor or to any third party, and MUST state `unknown` where this is not documented. As in CONFIDE, `unknown` is not neutral: a class marked `unknown` MUST be treated as transmitted.
 
-Where a harness transmits any artifact of class A1, A2, or A3, the harness MUST additionally be registered as a CONFIDE provider under section 11.1, because it is then an inference custody path and not merely a tool.
+Where a harness transmits any artifact of class A1, A2, or A3 as an artifact, outside the payload of a brokered inference call per the distinction in section 11.1, the harness MUST additionally be registered as a CONFIDE provider under section 11.1, because it is then an inference custody path and not merely a tool.
 
 ### 4.4 Status lifecycle
 
@@ -250,18 +257,20 @@ A harness MUST degrade to `probationary` when its observed version falls outside
 
 ### 5.1 The unregistered root invariant
 
-A brain MUST periodically scan for artifact roots that are not present in the registry, and MUST report each one as a health failure. The scan MUST cover, at minimum, the user home directory to a declared depth, the operating system application support and log paths, the temporary directory, and every working directory the brain is checked out in.
+A brain MUST scan for artifact roots that are not present in the registry, and MUST report each one as a health failure. The sweep interval and the scan depth are required charter fields, and a sweep that has not completed within its declared interval MUST be reported as `sweep-overdue`. The scan MUST cover, at minimum, the user home directory to the declared depth, the operating system application support and log paths, the temporary directory, and every working directory the brain is checked out in.
+
+Each sweep MUST write a sweep report to the ledger as a Layer 6 entry, recording the roots enumerated, their sizes and item counts per section 5.3, and every failure found, at evidence grade `observed`. A sweep that leaves no ledger record has not run for conformance purposes: the report is what makes the sweep obligation of section 13.1 checkable rather than asserted.
 
 This is the counterpart to the CONFIDE egress invariant, and it exists for the same reason: a control that depends on the owner remembering to declare a new tool will be defeated by the first tool the owner installs and forgets. Detection is what makes the registry self correcting rather than aspirational.
 
 ### 5.2 Scratch surfaces inside the brain
 
-Harnesses write inside the working directory. A brain MUST declare every such location as a **scratch surface** in Layer 2, and the following MUST hold for each.
+Harnesses write inside the working directory. A brain MUST declare every such location as a **scratch surface** in Layer 2. A scratch surface is a mixed root under section 3.3: it is declared with class pattern rules and a default class exactly as any artifact root, and every exclusion in this section operates per class rule, not per surface as a unit. A path a class rule matches to A0 is governed under section 10.1 rather than excluded. For every other artifact in the surface, the following MUST hold.
 
-- Its contents MUST NOT be counted as brain state, MUST NOT satisfy any Layer 4 gate, and MUST NOT be treated as a record by any check.
-- It MUST be excluded from the publication guard's inputs, and MUST also be excluded from the guard's notion of coverage, so that an empty scan of a scratch surface never contributes to a passing result.
-- It MUST be excluded from the version control working set unless its class is A0.
-- It MUST be listed in the charter, so that its presence is a declared fact rather than a discovered one.
+- It MUST NOT be counted as brain state, MUST NOT satisfy any Layer 4 gate, and MUST NOT be treated as a record by any check.
+- It MUST be excluded from the publication guard's inputs, and the surface MUST also be excluded from the guard's notion of coverage, so that an empty scan of a scratch surface never contributes to a passing result.
+- It MUST be excluded from the version control working set. Paths matched to A0 remain in the working set under section 10.1, and a machine specific grant MAY be excluded from it under the rule of that section.
+- The surface MUST be listed in the charter, so that its presence is a declared fact rather than a discovered one.
 
 A scratch surface is the one place where a file inside the brain folder is not brain content. That exception MUST be explicit and enumerated, because an unenumerated exception is indistinguishable from a gap.
 
@@ -282,6 +291,8 @@ A brain SHOULD open a **session anchor** when a harness session begins against b
 An anchor at open declares the harness, the host, the actor identity, the inference authorization in force, the working scope, and the anchor's own identifier. It is written to the brain ledger and is the join key for everything the session produces.
 
 The anchor is created by the brain, not by the harness. A brain that enumerates its sessions by reading harness storage has delegated the completeness of its audit trail to the tool being audited.
+
+A session start hook that the brain installed into the harness's configuration is a mechanism the brain controls, and an anchor opened by such a hook is `observed` under section 2.4, notwithstanding that the harness executes the hook. This holds only while the hook's definition is an A0 artifact inside the brain whose digest matches the installed copy. A hook the brain cannot verify is the harness reporting on itself, and an anchor it opens is `attested`.
 
 ### 6.2 Sealing an anchor
 
@@ -344,7 +355,7 @@ Referencing such a file from the ledger does not fix this. It produces a ledger 
 
 Sealing an artifact:
 
-1. Copies the bytes to the artifact store, which MUST be append only and MUST NOT be writable by any harness.
+1. Copies the bytes to the artifact store, which MUST be append only and MUST NOT be writable by any harness, with writes attributed per section 2.6.
 2. Computes the SHA-256 of the copied bytes.
 3. Assigns class and sensitivity per sections 3 and 7.
 4. Writes an artifact ledger entry with the digest, class, sensitivity, custody floor, source path, anchor identifier, retention expiry, and evidence grade.
@@ -398,6 +409,8 @@ A harness deleting its own artifacts is not an exception to this rule, but neith
 
 A purge MUST be a scheduled, reviewed operation that produces a manifest of what will be deleted, requires owner approval bound to the bytes of that manifest, and writes one ledger entry per deleted artifact.
 
+A purge is the sole exception to the artifact store's append only property. The append only property forbids in place mutation and unrecorded removal; it does not forbid removal of artifact bytes executed under an approved manifest. The ledger is not excepted: the manifest, the approval, and the per artifact deletion entries remain as the tombstone of what was purged, so the chain stays whole while the bytes are gone.
+
 A **hold** MAY be placed on any artifact, session, scope, or time range. A held artifact MUST NOT be purged, and MUST NOT have its retention shortened, while the hold stands. A hold MUST record who placed it and why, and MUST NOT expire automatically.
 
 Where a hold and a retention expiry conflict, the hold wins. Where a hold and a peer agreement's deletion obligation conflict, the conflict MUST be reported to the owner as a decision and MUST NOT be resolved by either default, because the correct answer depends on the obligation and cannot be encoded in advance.
@@ -413,7 +426,7 @@ Agent definitions, skills, rules, and permission grants determine what agents do
 - A0 artifacts MUST be stored inside the brain, MUST be under version control, and MUST pass the same gates as any other governing record.
 - Every Layer 7 agent charter MUST reference the A0 artifacts that implement it, by path and digest.
 - An A0 artifact present in a harness root but not inside the brain MUST be reported as `ungoverned-directive`, and the harness MUST be treated as `probationary` until it is either brought inside or removed.
-- A machine specific permission grant MAY be excluded from version control, and MUST then be enumerated and digested by the sweep, since a local grant that widens an agent's authority is exactly the kind of change that should not be invisible.
+- A machine specific permission grant MAY be excluded from version control, notwithstanding the A0 inclusion rule of section 5.2, and MUST then be enumerated and digested by the sweep, since a local grant that widens an agent's authority is exactly the kind of change that should not be invisible. This digesting binds wherever the sweep of section 5.1 binds, which is Tier 1.
 - An agent identity MUST NOT modify an A0 artifact that grants its own authority.
 
 The distinction between A0 and everything else is the distinction between the instructions and the transcript. Both need governance, and they need opposite kinds: directives must be few, reviewed, versioned, and current, while sessions must be many, unreviewed, sealed, and historical. Storing them in the same tree, as every harness does, is what makes them easy to confuse.
@@ -465,6 +478,8 @@ The adopt or expire rule exists because the alternative is a permanent, unreview
 
 A harness that transmits A1, A2, or A3 artifacts to its vendor or to any third party is performing the same act as an inference call: brain content crosses to a party outside the owner's custody. It MUST be registered as a CONFIDE provider, assigned a custody class by the same rules, and constrained by the same matrix.
 
+This section governs artifact egress, not inference payloads. Session content transmitted inside the payload of a brokered inference call is governed by CONFIDE as the call itself, and does not make the harness a provider under this section. What this section reaches is the transmission of artifacts as artifacts: history sync, cloud session storage, vendor backup, support upload, and any transfer outside the payload of a brokered call. Without this distinction every harness would be a provider by the act of calling at all, and the registration requirement would mean nothing.
+
 This closes the largest gap in CONFIDE taken alone. A brain can route every inference call through a resident provider at C0 and still ship the complete text of every session to a vendor cloud, because the harness synced its history. The inference was governed and the record still left.
 
 ### 11.2 Backup and snapshot inclusion
@@ -487,7 +502,7 @@ A support bundle sent to a vendor is a transfer to a party with no agreement at 
 
 A brain MUST report each of the following by name.
 
-`harness-unregistered`, `artifact-root-undeclared`, `artifact-class-unassigned`, `session-unanchored`, `anchor-abandoned`, `anchor-reconstructed`, `call-without-anchor`, `anchor-claims-unknown-call`, `seal-refused`, `seal-store-unreachable`, `artifact-unsealed-past-policy`, `protected-artifact-vanished`, `protected-artifact-deleted-without-entry`, `agent-attempted-artifact-deletion`, `retention-expired-unpurged`, `retention-indefinite-prohibited`, `hold-violated`, `credential-artifact-in-store`, `credential-artifact-in-version-control`, `ungoverned-directive`, `directive-digest-mismatch`, `agent-modified-own-directive`, `derived-artifact-past-max-age`, `derived-artifact-asserted-authority`, `copy-outlived-source`, `copy-satisfied-gate`, `telemetry-posture-unknown`, `harness-egress-unregistered`, `backup-included-credential`, `backup-below-custody-floor`, `scratch-surface-in-working-set`, `scratch-surface-counted-as-state`, `harness-version-out-of-range`, `root-exceeded-expected-growth`.
+`harness-unregistered`, `artifact-root-undeclared`, `sweep-overdue`, `artifact-class-unassigned`, `session-unanchored`, `anchor-abandoned`, `anchor-reconstructed`, `call-without-anchor`, `anchor-claims-unknown-call`, `seal-refused`, `seal-store-unreachable`, `artifact-unsealed-past-policy`, `protected-artifact-vanished`, `protected-artifact-deleted-without-entry`, `agent-attempted-artifact-deletion`, `retention-expired-unpurged`, `retention-indefinite-prohibited`, `hold-violated`, `credential-artifact-in-store`, `credential-artifact-in-version-control`, `ungoverned-directive`, `directive-digest-mismatch`, `agent-modified-own-directive`, `derived-artifact-past-max-age`, `derived-artifact-asserted-authority`, `copy-outlived-source`, `copy-satisfied-gate`, `telemetry-posture-unknown`, `harness-egress-unregistered`, `backup-included-credential`, `backup-below-custody-floor`, `scratch-surface-in-working-set`, `scratch-surface-counted-as-state`, `harness-version-out-of-range`, `root-exceeded-expected-growth`.
 
 ---
 
@@ -505,18 +520,20 @@ Registration and enumeration are required at the lowest tier for the same reason
 
 ### 13.2 Health invariants
 
-- Any artifact root not present in the registry.
-- Any harness whose observed version falls outside its declared range.
-- Any harness session with no anchor, where a reconstructed anchor does not satisfy this check.
-- Any anchor unsealed past its abandonment interval.
-- Any call ledger entry with no anchor, or any anchor claiming a call absent from the call ledger.
-- Any A4 artifact in the artifact store, in version control, or in a brain folder.
-- Any A0 artifact in a harness root but not inside the brain, or whose digest does not match the charter that references it.
-- Any A2 artifact past its declared maximum age, or with no declared maximum age.
-- Any protected artifact past retention with no purge decision, or missing with no deletion entry.
-- Any scratch surface present in the version control working set or counted by any gate.
-- Any root exceeding its declared expected growth.
-- Any harness with telemetry posture `unknown` authorized above `none` sensitivity.
+Each invariant binds at the tier named and at every tier above it. An invariant of a higher tier is not evaluated against a brain claiming a lower tier, and a lower tier brain MUST NOT be reported as failing it.
+
+- Tier 1. Any artifact root not present in the registry.
+- Tier 1. Any harness whose observed version falls outside its declared range.
+- Tier 2. Any harness session with no anchor, where a reconstructed anchor does not satisfy this check.
+- Tier 2. Any anchor unsealed past its abandonment interval.
+- Tier 2. Any call ledger entry with no anchor, or any anchor claiming a call absent from the call ledger.
+- Tier 1. Any A4 artifact in version control or in a brain folder. Tier 2 adds: any A4 artifact in the artifact store.
+- Tier 2. Any A0 artifact in a harness root but not inside the brain, or whose digest does not match the charter that references it.
+- Tier 2. Any A2 artifact past its declared maximum age, or with no declared maximum age.
+- Tier 2. Any protected artifact past retention with no purge decision, or missing with no deletion entry.
+- Tier 1. Any scratch surface artifact in the version control working set, other than a path matched to A0 under section 5.2, or any scratch surface counted by any gate.
+- Tier 1. Any root exceeding its declared expected growth.
+- Tier 1. Any harness with telemetry posture `unknown` authorized above `none` sensitivity.
 
 ### 13.3 Self test
 
