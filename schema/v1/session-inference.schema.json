@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/session-inference.schema.json",
+  "title": "CONFIDE Tier 1 Session Inference Entry",
+  "description": "One call-ledger entry covering an inference session at session granularity, per CONFIDE/1.0 section 12.1. Written by a session close hook; every claim it carries is what such a hook can honestly supply. A session that used more than one provider writes one entry per provider. Per-call fields a hook cannot honestly supply are absent, never fabricated. The per-call form is inference-call.schema.json and binds at Tier 2.",
+  "type": "object",
+  "required": [
+    "contractVersion",
+    "sessionId",
+    "providerId",
+    "startedAt",
+    "endedAt",
+    "callsCovered",
+    "callsRefused",
+    "callsFailed",
+    "weakestCustodyClass",
+    "evidenceGrade",
+    "prevHash",
+    "entryHash",
+    "signature"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": {
+      "const": "confide-session/v1"
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The tooling session this entry covers. Where TRACE/1.0 is in effect this is the session anchor's identifier; see anchorId."
+    },
+    "harnessId": {
+      "type": ["string", "null"],
+      "pattern": "^harness:[a-z0-9][a-z0-9._-]*$",
+      "description": "The TRACE/1.0 harness registry identifier, where a registry exists. Null where none does; null MUST mean no registry, never an unregistered harness silently elided."
+    },
+    "anchorId": {
+      "type": ["string", "null"],
+      "description": "Cross-reference to the TRACE session anchor, where anchoring is in effect. Null at Tier 1 where it is not."
+    },
+    "providerId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The provider record this entry cites. Exactly one per entry."
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "callsCovered": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Calls this entry covers. A call is recorded, in the Tier 1 sense, when an entry covers it."
+    },
+    "callsRefused": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "callsFailed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "weakestCustodyClass": {
+      "enum": ["C0", "C1", "C2", "C3", "C4"],
+      "description": "The weakest custody class observed across the covered calls."
+    },
+    "evidenceGrade": {
+      "enum": ["observed", "attested"],
+      "description": "attested for hook-written entries; observed only where a broker wrote the entry, which is a Tier 2 posture."
+    },
+    "prevHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest of the previous entry in the call-ledger family, or the chain head sentinel (sha256: followed by sixty-four zeros) for the family's first entry, per BLUEPRINT/1.0 section 8.4."
+    },
+    "entryHash": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Digest over the entry's canonical bytes with the entryHash and signature values excluded, per BLUEPRINT/1.0 section 2.3 ledger entry bytes."
+    },
+    "signature": {
+      "type": "object",
+      "required": ["keyId", "sig"],
+      "additionalProperties": false,
+      "properties": {
+        "keyId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alg": {
+          "const": "ed25519"
+        },
+        "sig": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Computed over the same excluded byte sequence as entryHash, per BLUEPRINT/1.0 section 2.3."
+        }
+      }
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  }
+}
