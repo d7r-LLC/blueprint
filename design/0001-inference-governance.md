@@ -170,8 +170,8 @@ Local files on the author's machine, read 2026-08-25, plus the specifications in
 
 - `<repo>/blueprint/spec/BLUEPRINT-v1.0.md`, `spec/SPEAK-v1.0.md`, `spec/CONFIDE-v1.0.md`
 - `<repo>/blueprint/design/0000-workflow-and-spec-design.md`
-- `/Users/sthornock/code/obsidian/brain/AGENTS.md` (sensitivity and visibility vocabularies, the seven agent identities, the publication check, decisions `0005`, `0017`, `0018`, `0019`, `0027`, `0028`, `0037`, `0038`)
-- `/Users/sthornock/code/obsidian/automation/flowstate_outbox_contract.py` (`PRIVACY_CLASSES`, `PRIVACY_DENY_KEYS`, the state machine and readback reconciliation reused here)
-- `/Users/sthornock/code/obsidian/audit/2026-08-23-distributed/architecture-review.md` (fail closed when the serializer is unreachable; the evidence that unattended gates rot)
-- `/Users/sthornock/code/d7r/src/saga-standard/spec/SAGA-v1.0.md` (data classification 13.5, redaction manifests 13.5.4, canonical JSON and signatures 16)
-- `/Users/sthornock/code/d7r/src/agent-rights/spec/BILL_OF_RIGHTS-v1.0.md` (Right IX Transparency, which is the reason generated content carries its derivation rather than passing as authored)
+- `~/code/obsidian/brain/AGENTS.md` (sensitivity and visibility vocabularies, the seven agent identities, the publication check, decisions `0005`, `0017`, `0018`, `0019`, `0027`, `0028`, `0037`, `0038`)
+- `~/code/obsidian/automation/flowstate_outbox_contract.py` (`PRIVACY_CLASSES`, `PRIVACY_DENY_KEYS`, the state machine and readback reconciliation reused here)
+- `~/code/obsidian/audit/2026-08-23-distributed/architecture-review.md` (fail closed when the serializer is unreachable; the evidence that unattended gates rot)
+- `~/code/d7r/src/saga-standard/spec/SAGA-v1.0.md` (data classification 13.5, redaction manifests 13.5.4, canonical JSON and signatures 16)
+- `~/code/d7r/src/agent-rights/spec/BILL_OF_RIGHTS-v1.0.md` (Right IX Transparency, which is the reason generated content carries its derivation rather than passing as authored)

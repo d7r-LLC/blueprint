@@ -167,9 +167,9 @@ Local device survey conducted 2026-08-25 on the author's machine, plus the speci
 
 - Artifact root sizes and file counts: `~/.claude`, `~/.claude.json`, `~/.codex`, `~/.cursor`, `~/.gemini`, `~/.ollama`, `~/.continue`, `~/.vscode`, `Library/Application Support/Claude`, `Library/Logs/Claude`
 - Vault referencing transcripts: seven folders under `~/.claude/projects/` matching `-Users-sthornock-code-obsidian*`, 578 `.jsonl` files
-- Versioned harness files: `git ls-files` in `/Users/sthornock/code/obsidian` filtered to `.claude`, `.codex`, `.cursor`
-- Ignore rules: `/Users/sthornock/code/obsidian/.gitignore`
+- Versioned harness files: `git ls-files` in `~/code/obsidian` filtered to `.claude`, `.codex`, `.cursor`
+- Ignore rules: `~/code/obsidian/.gitignore`
 - `<repo>/blueprint/spec/BLUEPRINT-v1.0.md`, `spec/CONFIDE-v1.0.md`, `spec/SPEAK-v1.0.md`, `spec/TRACE-v1.0.md`
 - `<repo>/blueprint/design/0000-workflow-and-spec-design.md`, `design/0001-inference-governance.md`
-- `/Users/sthornock/code/obsidian/brain/AGENTS.md` (sensitivity vocabulary, the seven agent identities, decisions `0018`, `0027`, `0037`, `0038`)
-- `/Users/sthornock/code/d7r/src/agent-rights/spec/BILL_OF_RIGHTS-v1.0.md` (Right IX Transparency)
+- `~/code/obsidian/brain/AGENTS.md` (sensitivity vocabulary, the seven agent identities, decisions `0018`, `0027`, `0037`, `0038`)
+- `~/code/d7r/src/agent-rights/spec/BILL_OF_RIGHTS-v1.0.md` (Right IX Transparency)

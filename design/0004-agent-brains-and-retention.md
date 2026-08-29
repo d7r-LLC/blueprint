@@ -17,7 +17,7 @@ Every element of that survived into RETAIN. The word sub-brain did not.
 
 ## 2. What the personal brain already does
 
-Read from `/Users/sthornock/code/obsidian` before designing anything.
+Read from `~/code/obsidian` before designing anything.
 
 - `.claude/agents/` holds seven working agents plus an `advisors/` folder: auditor, curator, editor, groundskeeper, librarian, scout, skeptic
 - `.claude/agents/advisors/_council.md` defines six advisory seats as "a lens, not a person" on Napoleon Hill's Invisible Counselors pattern, with hard rules against claiming to be the person, inventing a quote, or speaking for what they would say today, and a budget of at most three questions and one observation per seat per session

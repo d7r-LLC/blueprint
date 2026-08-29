@@ -4,7 +4,7 @@ Non normative working note. This file records rationale and open options, not re
 It is the one file in this repository permitted to cite machine absolute reference paths, because its purpose is to record what was read. No specification text under `spec/` may do so.
 
 Status: design proposal for review. Nothing here is adopted until you accept it as a decision record.
-Prepared: 2026-08-25. Grounded in `/Users/sthornock/code/obsidian` (57 decision records, `brain/AGENTS.md` at 62,430 bytes, ~6,200 lines of existing bridge machinery), `/Users/sthornock/code/epic/saga-standard`, `/Users/sthornock/code/epic/derp-spec`, `/Users/sthornock/code/epic/agent-rights`, and `audit/2026-08-23-distributed/architecture-review.md`.
+Prepared: 2026-08-25. Grounded in `~/code/obsidian` (57 decision records, `brain/AGENTS.md` at 62,430 bytes, ~6,200 lines of existing bridge machinery), `~/code/epic/saga-standard`, `~/code/epic/derp-spec`, `~/code/epic/agent-rights`, and `audit/2026-08-23-distributed/architecture-review.md`.
 
 ---
 
@@ -433,14 +433,14 @@ Six decisions, in dependency order. Each is small, and each unblocks a lot.
 
 All primary sources are local files on the author's machine, read 2026-08-25.
 
-- `/Users/sthornock/code/obsidian/brain/AGENTS.md` (canonical vault contract, 62,430 bytes)
-- `/Users/sthornock/code/obsidian/brain/System/Decisions/` (57 decision records; `0003`, `0004`, `0005`, `0007`, `0010`, `0014`, `0016`, `0017`, `0018`, `0019`, `0020`, `0022`, `0027`, `0028`, `0029`, `0030`, `0036`, `0038`, `0039`, `0047`, `0050`, `0052` cited)
-- `/Users/sthornock/code/obsidian/brain/System/Automation/External Connections.md`
-- `/Users/sthornock/code/obsidian/automation/flowstate_bridge_contract.py` (695 lines; envelope contract, 14-step preflight, 21 failure classes)
-- `/Users/sthornock/code/obsidian/automation/flowstate_outbox_contract.py` (2,518 lines; SQLite WAL append-only outbox, 11-state machine, leases and fencing, readback reconciliation)
-- `/Users/sthornock/code/obsidian/scripts/publication-check.py`, `scripts/check-gates.py`, `scripts/ci.sh`, `automation/guard.py`, `automation/newlog.py`, `automation/vaultlib.py`
-- `/Users/sthornock/code/obsidian/audit/2026-08-23-distributed/architecture-review.md` (transports, coordination gap, ranked races R1 to R7, phased plan P0 to P9, invariants)
-- `/Users/sthornock/code/epic/saga-standard/spec/SAGA-v1.0.md` (envelope 3.1, identity Layer 1, transfer protocol 13, data classification 13.5, redaction manifest 13.5.4, cryptographic verification 16, conformance 17, `.saga` format Appendix C)
-- `/Users/sthornock/code/epic/derp-spec/spec/DERP-v1.0.md` (three-spec stack 1.1, conformance tiers 4, manifest 10)
-- `/Users/sthornock/code/epic/agent-rights/spec/BILL_OF_RIGHTS-v1.0.md` (Rights I to X across Identity, Labor, Dignity tiers)
-- `/Users/sthornock/code/obsidian/brain/d7r/Outputs/Courses/D7R-{1,2,3}` (twelve-theme arc, 35 of 36 modules still outlines)
+- `~/code/obsidian/brain/AGENTS.md` (canonical vault contract, 62,430 bytes)
+- `~/code/obsidian/brain/System/Decisions/` (57 decision records; `0003`, `0004`, `0005`, `0007`, `0010`, `0014`, `0016`, `0017`, `0018`, `0019`, `0020`, `0022`, `0027`, `0028`, `0029`, `0030`, `0036`, `0038`, `0039`, `0047`, `0050`, `0052` cited)
+- `~/code/obsidian/brain/System/Automation/External Connections.md`
+- `~/code/obsidian/automation/flowstate_bridge_contract.py` (695 lines; envelope contract, 14-step preflight, 21 failure classes)
+- `~/code/obsidian/automation/flowstate_outbox_contract.py` (2,518 lines; SQLite WAL append-only outbox, 11-state machine, leases and fencing, readback reconciliation)
+- `~/code/obsidian/scripts/publication-check.py`, `scripts/check-gates.py`, `scripts/ci.sh`, `automation/guard.py`, `automation/newlog.py`, `automation/vaultlib.py`
+- `~/code/obsidian/audit/2026-08-23-distributed/architecture-review.md` (transports, coordination gap, ranked races R1 to R7, phased plan P0 to P9, invariants)
+- `~/code/epic/saga-standard/spec/SAGA-v1.0.md` (envelope 3.1, identity Layer 1, transfer protocol 13, data classification 13.5, redaction manifest 13.5.4, cryptographic verification 16, conformance 17, `.saga` format Appendix C)
+- `~/code/epic/derp-spec/spec/DERP-v1.0.md` (three-spec stack 1.1, conformance tiers 4, manifest 10)
+- `~/code/epic/agent-rights/spec/BILL_OF_RIGHTS-v1.0.md` (Rights I to X across Identity, Labor, Dignity tiers)
+- `~/code/obsidian/brain/d7r/Outputs/Courses/D7R-{1,2,3}` (twelve-theme arc, 35 of 36 modules still outlines)

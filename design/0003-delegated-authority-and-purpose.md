@@ -9,7 +9,7 @@
 
 ## 1. What prompted this
 
-Two requests, one session. First: the spec must address agent authority delegation, with the org chart, RACI, and reporting structure at `/Users/sthornock/code/epic/epic-flowstate-community/.flowstate/agents/ORG_CHART.md` as the reference, a Tim Ferriss style monetary threshold for friction removal, and the Eisenhower matrix for priority and delegation. Second: the brain needs a declared purpose, values, tenets, mottos, beliefs, and drivers, sitting above all other specs, consulted on every decision and every crossing, with the Four Agreements as a model and "Guiding Light" or "Morning Star" as the naming instinct.
+Two requests, one session. First: the spec must address agent authority delegation, with the org chart, RACI, and reporting structure at `~/code/epic/epic-flowstate-community/.flowstate/agents/ORG_CHART.md` as the reference, a Tim Ferriss style monetary threshold for friction removal, and the Eisenhower matrix for priority and delegation. Second: the brain needs a declared purpose, values, tenets, mottos, beliefs, and drivers, sitting above all other specs, consulted on every decision and every crossing, with the Four Agreements as a model and "Guiding Light" or "Morning Star" as the naming instinct.
 
 These produced two documents. They are separate because one is a mechanism and one is a reason, and collapsing them would let the reason be used as a mechanism, which is section 8 of POLARIS.
 
@@ -27,7 +27,7 @@ Read from `epic-flowstate-community` before designing anything.
 
 This is a working approval system. Most of what DEFER requires exists here in some form, which is why DEFER is written as a correction rather than an invention.
 
-Also read: the personal brain at `/Users/sthornock/code/obsidian/brain/AGENTS.md` line 381 carries a **change authority table** with four levels, Mechanical, Structural, Substantive, Factual, each with a stated agent authority, and the rule "when classification is uncertain, use the more conservative level." Seven agents in `.claude/agents/` operate under it, and `groundskeeper.md` states plainly that it holds mechanical authority only and that "deletion is never yours."
+Also read: the personal brain at `~/code/obsidian/brain/AGENTS.md` line 381 carries a **change authority table** with four levels, Mechanical, Structural, Substantive, Factual, each with a stated agent authority, and the rule "when classification is uncertain, use the more conservative level." Seven agents in `.claude/agents/` operate under it, and `groundskeeper.md` states plainly that it holds mechanical authority only and that "deletion is never yours."
 
 That table is the seed of the whole design. It is already the right shape: authority scoped by kind of change rather than by rank. DEFER generalizes it from four levels over text edits to four axes over every act class.
 
