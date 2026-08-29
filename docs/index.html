@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en" data-accent="blueprint">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blueprint: an open specification for owned, governed, exchangeable knowledge</title>
+<meta name="description" content="A brain is a locally owned, policy governed, append only audited folder of plain text. Blueprint specifies the structure and governance of one brain, in seven documents.">
+<link rel="canonical" href="https://blueprint-spec.dev/">
+<meta property="og:title" content="Blueprint">
+<meta property="og:description" content="An open specification for owned, governed, exchangeable knowledge. SAGA moves an agent. Blueprint moves a thought.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://blueprint-spec.dev/">
+<script>
+  (function () {
+    document.documentElement.classList.add('js');
+    try {
+      var t = localStorage.getItem('d7r-theme');
+      if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="/assets/css/d7r-os.css">
+</head>
+<body>
+
+<div class="aurora" aria-hidden="true"></div>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <a class="logo" href="/" aria-label="blueprint-spec.dev home"><span class="em">~/</span>blueprint-spec<span class="em">.dev</span><span class="cursor" aria-hidden="true"></span></a>
+    <nav aria-label="Primary">
+      <a href="#stack">Stack</a>
+      <a href="#documents">Documents</a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/d7r-LLC/blueprint">GitHub</a>
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle color theme">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="hero">
+  <div class="gridfield" aria-hidden="true"></div>
+  <div class="wrap">
+    <p class="eyebrow">knowledge</p>
+    <h1>Blueprint</h1>
+    <p class="expansion">How knowledge is held, governed, and exchanged</p>
+    <p class="thesis">
+      A brain is a locally owned, policy governed, append only audited folder of plain
+      text. Blueprint specifies the structure and governance of one brain; its six
+      companions specify what the brain is for, who may decide, how knowledge moves
+      between brains, how a model may process it, what tooling leaves behind, and what
+      an agent that learns is allowed to keep.
+    </p>
+
+    <div class="status-flag reveal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      <span><strong>Draft.</strong> Nothing in this repository is adopted until it lands as a
+      decision record. Conformance claims against a draft are premature.</span>
+    </div>
+
+    <div class="meta-chips"><span class="role">v1.0</span><span class="role">draft</span><span class="role">Apache 2.0</span></div>
+
+    <div class="actions">
+      <a class="btn btn-primary" href="https://github.com/d7r-LLC/blueprint/tree/main/spec">read --spec</a>
+      <a class="btn btn-secondary" href="https://github.com/d7r-LLC/blueprint">Source on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">stack</p>
+      <h2>The fourth member of the stack</h2>
+      <p class="lede">
+        The agent stack governs agents as digital workers; Blueprint governs the brains
+        they work with. SAGA moves an agent. Blueprint moves a thought.
+      </p>
+    </div>
+    <div class="family reveal" style="max-width:40rem">
+      <div class="stack">
+        <div class="layer">
+          <span class="layer-name">ABR</span>
+          <span class="layer-what">what agents deserve · agent-rights.org</span>
+        </div>
+        <div class="layer">
+          <span class="layer-name">DERP</span>
+          <span class="layer-what">what the runtime must provide · derp-spec.dev</span>
+        </div>
+        <div class="layer">
+          <span class="layer-name">SAGA</span>
+          <span class="layer-what">how an agent is represented · saga-standard.dev</span>
+        </div>
+        <div class="layer here">
+          <span class="layer-name">Blueprint</span>
+          <span class="layer-what">how knowledge is held, governed, and exchanged</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="documents">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">documents</p>
+      <h2>Seven documents, one brain</h2>
+      <p class="lede">
+        One brain, three boundaries, one authority model, one reason. Knowledge crosses to
+        another brain under SPEAK, to a model under CONFIDE, and into the tooling under
+        TRACE. Every crossing is an act, DEFER says who may authorize it, and POLARIS says
+        whether the brain will do it at all.
+      </p>
+    </div>
+    <div class="cards">
+
+      <article class="card reveal">
+        <span class="num">01</span>
+        <header><h3>BLUEPRINT</h3><span class="role">structure</span></header>
+        <p class="answers">A single brain, in ten layers.</p>
+        <p>The folder itself: identity, records, policy, ledger, and the layers that make
+        a directory of plain text into an owned, audited body of knowledge.</p>
+        <footer><a class="btn btn-secondary btn-sm" href="https://github.com/d7r-LLC/blueprint/blob/main/spec/BLUEPRINT-v1.0.md">BLUEPRINT-v1.0.md</a></footer>
+      </article>
+
+      <article class="card reveal">
+        <span class="num">02</span>
+        <header><h3>POLARIS</h3><span class="role">purpose</span></header>
+        <p class="answers">Purpose and alignment.</p>
+        <p>What the brain exists for, and the refusals, obligations, loyalties, and
+        standards that narrow every act. Highest precedence to forbid, none to permit.</p>
+        <footer><a class="btn btn-secondary btn-sm" href="https://github.com/d7r-LLC/blueprint/blob/main/spec/POLARIS-v1.0.md">POLARIS-v1.0.md</a></footer>
+      </article>
+
+      <article class="card reveal">
+        <span class="num">03</span>
+        <header><h3>DEFER</h3><span class="role">authority</span></header>
+        <p class="answers">Delegated authority.</p>
+        <p>Consequence classes, authority envelopes, signed grants, routing, escalation,
+        and decision records. Who may decide, bounded by what.</p>
+        <footer><a class="btn btn-secondary btn-sm" href="https://github.com/d7r-LLC/blueprint/blob/main/spec/DEFER-v1.0.md">DEFER-v1.0.md</a></footer>
+      </article>
+
+      <article class="card reveal">
+        <span class="num">04</span>
+        <header><h3>SPEAK</h3><span class="role">exchange</span></header>
+        <p class="answers">Brain-to-brain exchange.</p>
+        <p>How knowledge moves between brains without merging them: signed, classified,
+        reconciled, auditable.</p>
+        <footer><a class="btn btn-secondary btn-sm" href="https://github.com/d7r-LLC/blueprint/blob/main/spec/SPEAK-v1.0.md">SPEAK-v1.0.md</a></footer>
+      </article>
+
+      <article class="card reveal">
+        <span class="num">05</span>
+        <header><h3>CONFIDE</h3><span class="role">inference</span></header>
+        <p class="answers">Inference governance.</p>
+        <p>Which providers may see which records, under what evidence, logged to a
+        hash-chained ledger. Processing without leaving the owner's control.</p>
+        <footer><a class="btn btn-secondary btn-sm" href="https://github.com/d7r-LLC/blueprint/blob/main/spec/CONFIDE-v1.0.md">CONFIDE-v1.0.md</a></footer>
+      </article>
+
+      <article class="card reveal">
+        <span class="num">06</span>
+        <header><h3>TRACE</h3><span class="role">residue</span></header>
+        <p class="answers">Tooling residue.</p>
+        <p>Harness registration, artifact classes, session anchors, sealing, and retention:
+        the crossing that happens on every operation, and the one nobody declared.</p>
+        <footer><a class="btn btn-secondary btn-sm" href="https://github.com/d7r-LLC/blueprint/blob/main/spec/TRACE-v1.0.md">TRACE-v1.0.md</a></footer>
+      </article>
+
+      <article class="card reveal">
+        <span class="num">07</span>
+        <header><h3>RETAIN</h3><span class="role">agent brains</span></header>
+        <p class="answers">Whose brain an agent has.</p>
+        <p>When accumulated agent state is residue, when it is a domain you own, and when
+        it is a brain someone else owns; plus what an agent keeps when the engagement ends.</p>
+        <footer><a class="btn btn-secondary btn-sm" href="https://github.com/d7r-LLC/blueprint/blob/main/spec/RETAIN-v1.0.md">RETAIN-v1.0.md</a></footer>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section id="principles">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">principles</p>
+      <h2>Two rules that carry the design</h2>
+    </div>
+    <div class="prose">
+      <p>
+        <strong>Precedence is asymmetric, and the asymmetry is the point.</strong> POLARIS
+        holds the highest precedence to forbid an act and no precedence to permit one.
+        Purpose may narrow what a brain will do. It may never widen it, satisfy another
+        document's check, or excuse a failure.
+      </p>
+      <p>
+        <strong>There are no sub-brains.</strong> Containment and boundary are mutually
+        exclusive: if you can read it at will, the agent has a folder; if you cannot, it is
+        not inside you. Whoever holds the signing key owns the refusal, and a brain you can
+        sign for is a folder with aspirations. What looks like a hierarchy of brains is a
+        set of peers under asymmetric agreements plus an authority graph that DEFER already
+        governs.
+      </p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="colophon">
+  <div class="wrap cols">
+    <div>
+      <p>Blueprint v1.0, draft &middot; Apache 2.0 &middot; part of <a href="https://d7r.io">d7r Open Source</a>.</p>
+      <p>Nothing in the repository is adopted until it lands as a decision record.</p>
+    </div>
+    <div>
+      <p><a href="https://github.com/d7r-LLC/blueprint">GitHub</a> &middot; <a href="mailto:hello@d7r.io">hello@d7r.io</a></p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  document.getElementById('theme-toggle').addEventListener('click', function () {
+    var root = document.documentElement;
+    var cur = root.getAttribute('data-theme');
+    if (!cur) cur = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    var next = cur === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('d7r-theme', next); } catch (e) {}
+  });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
+    document.querySelectorAll('.reveal').forEach(function (el) { io.observe(el); });
+  } else {
+    document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); });
+  }
+})();
+</script>
+
+</body>
+</html>
