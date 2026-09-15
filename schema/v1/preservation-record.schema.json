@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/preservation-record.schema.json",
+  "title": "INGEST Preservation Record",
+  "description": "The immutable record of a preserved capture. The capture itself may live outside the brain; the digest is what binds it.",
+  "type": "object",
+  "required": ["contractVersion", "preservationId", "attestationId", "digest",
+               "digestAlgorithm", "bytes", "storeLocation", "preservedAt", "verified"],
+  "additionalProperties": false,
+  "properties": {
+    "contractVersion": { "const": "INGEST/1.0" },
+    "preservationId": { "type": "string", "minLength": 1 },
+    "attestationId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "No preservation record may exist without one. Processing an unattested capture is IN-01."
+    },
+    "digest": { "type": "string", "pattern": "^[a-f0-9]{64,128}$" },
+    "digestAlgorithm": { "enum": ["sha256", "sha384", "sha512", "sha3-256", "sha3-512"] },
+    "bytes": { "type": "integer", "minimum": 0 },
+    "storeLocation": { "type": "string", "description": "Where the preserved bytes live. May be outside the brain." },
+    "preservedAt": { "type": "string", "format": "date-time" },
+    "verified": {
+      "type": "boolean",
+      "description": "The post-copy digest comparison. A record with verified false may not be cited."
+    },
+    "derivedFrom": {
+      "type": "string",
+      "description": "Set on an edited version, such as a release cut, naming the preservationId of the original."
+    }
+  }
+}

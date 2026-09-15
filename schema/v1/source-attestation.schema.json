@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/source-attestation.schema.json",
+  "title": "INGEST Source Attestation",
+  "description": "A signed human claim about the origin of a capture, made before any processing runs against it. An agent may prepare an attestation and may never sign one.",
+  "type": "object",
+  "required": ["contractVersion", "attestationId", "captureDigest", "digestAlgorithm",
+               "claim", "attestedAt", "attestingParty", "signature"],
+  "additionalProperties": false,
+  "$defs": {
+    "digestAlgorithm": {
+      "enum": ["sha256", "sha384", "sha512", "sha3-256", "sha3-512"],
+      "description": "MD5 and SHA-1 are excluded. Neither offers collision resistance, so neither can bind a specific artifact."
+    },
+    "consentState": {
+      "enum": ["granted", "pending", "refused"],
+      "description": "pending and refused both block publication. They differ in whether asking again is meaningful."
+    }
+  },
+  "properties": {
+    "contractVersion": { "const": "INGEST/1.0" },
+    "attestationId": { "type": "string", "minLength": 1 },
+    "captureDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64,128}$",
+      "description": "Digest of the capture, computed before preservation."
+    },
+    "digestAlgorithm": { "$ref": "#/$defs/digestAlgorithm" },
+    "claim": {
+      "enum": ["authentic-capture", "received-capture", "synthetic", "unknown-origin"],
+      "description": "Exactly one. A capture that is partly synthetic is synthetic. Material claimed received-capture, synthetic, or unknown-origin may never compose a curated artifact."
+    },
+    "capturedAt": { "type": "string", "format": "date-time" },
+    "attestedAt": { "type": "string", "format": "date-time" },
+    "attestingParty": {
+      "type": "object",
+      "required": ["name", "human"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "human": { "const": true, "description": "An attestation signed by a non-human party is IN-03." },
+        "identifier": { "type": "string" }
+      }
+    },
+    "device": { "type": "string", "description": "What made the capture, where known." },
+    "origin": { "type": "string", "description": "Required in practice when claim is received-capture: who it came from." },
+    "presentParties": {
+      "type": "array",
+      "description": "Identifiable people other than the attesting party. Each carries its own consent state.",
+      "items": {
+        "type": "object",
+        "required": ["name", "consent"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "consent": { "$ref": "#/$defs/consentState" },
+          "recordedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    },
+    "notes": { "type": "string" },
+    "signature": {
+      "type": "object",
+      "required": ["algorithm", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": { "type": "string" },
+        "value": { "type": "string" },
+        "publicKey": { "type": "string" }
+      }
+    }
+  }
+}

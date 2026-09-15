@@ -19,7 +19,7 @@ Blueprint is the fourth member of a four specification stack.
 
 SAGA moves an agent. Blueprint moves a thought.
 
-## Seven documents
+## Eight documents
 
 - `spec/BLUEPRINT-v1.0.md` defines a single brain, in ten layers.
 - `spec/POLARIS-v1.0.md` defines purpose and alignment: what the brain exists for, and the refusals, obligations, loyalties, and standards that narrow every act.
@@ -29,7 +29,9 @@ SAGA moves an agent. Blueprint moves a thought.
 - `spec/TRACE-v1.0.md` defines tooling residue: harness registration, artifact classes, session anchors, sealing, and retention of protected artifacts.
 - `spec/RETAIN-v1.0.md` defines agent brains: when accumulated agent state is residue, when it is a domain you own, and when it is a brain someone else owns, plus admission, mandates, coordination, and what an agent keeps when the engagement ends.
 
-One brain, three boundaries, one authority model, one reason. Knowledge crosses to another brain under SPEAK, to a model under CONFIDE, and into the tooling under TRACE. The third is the crossing that happens on every operation and is the one nobody declared. Every crossing is an act, DEFER says who may authorize it, and POLARIS says whether the brain will do it at all.
+- `spec/INGEST-v1.0.md` defines the inbound boundary: attestation before processing, preservation by digest, certification of faithful cleanup, authorship classes, and the trace path from a published sentence back to the certified source it came from.
+
+One brain, four boundaries, one authority model, one reason. Knowledge crosses to another brain under SPEAK, to a model under CONFIDE, and into the tooling under TRACE. The third of those is the crossing that happens on every operation and is the one nobody declared. All three point outward, and INGEST governs the one that points in, where the provenance chain starts and where it otherwise terminates in an assertion nobody made. Every crossing is an act, DEFER says who may authorize it, and POLARIS says whether the brain will do it at all.
 
 Precedence is asymmetric and the asymmetry is the point. POLARIS holds the highest precedence to **forbid** an act and no precedence to **permit** one. Purpose may narrow what a brain will do. It may never widen it, satisfy another document's check, or excuse a failure.
 

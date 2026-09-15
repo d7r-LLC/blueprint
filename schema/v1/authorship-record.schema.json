@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blueprint-spec.dev/schema/v1/authorship-record.schema.json",
+  "title": "INGEST Authorship Record",
+  "description": "The declared relationship between a published artifact and the human whose name is on it. An artifact takes the weakest true class. An undeclared class is malformed, not a default.",
+  "type": "object",
+  "required": ["contractVersion", "authorshipId", "artifactDigest", "digestAlgorithm",
+               "class", "surfaceClass", "traceGranularity", "declaredAt"],
+  "additionalProperties": false,
+  "$defs": {
+    "traceEntry": {
+      "type": "object",
+      "description": "Either a certified source reference, or a declaration that the author composed this directly.",
+      "oneOf": [
+        {
+          "required": ["certificationId", "sourceDigest"],
+          "additionalProperties": false,
+          "properties": {
+            "certificationId": { "type": "string", "minLength": 1 },
+            "sourceDigest": { "type": "string", "pattern": "^[a-f0-9]{64,128}$" },
+            "locator": { "type": "string", "description": "Which passage of the artifact this covers, at the declared granularity." }
+          }
+        },
+        {
+          "required": ["directComposition"],
+          "additionalProperties": false,
+          "properties": {
+            "directComposition": { "const": true },
+            "locator": { "type": "string" }
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "contractVersion": { "const": "INGEST/1.0" },
+    "authorshipId": { "type": "string", "minLength": 1 },
+    "artifactDigest": { "type": "string", "pattern": "^[a-f0-9]{64,128}$" },
+    "digestAlgorithm": { "enum": ["sha256", "sha384", "sha512", "sha3-256", "sha3-512"] },
+    "class": {
+      "enum": ["curated", "assisted", "generated"],
+      "description": "curated: every sentence traces to certified source or direct composition, machine assembly and mechanical editing only. assisted: machine help reached the sentences. generated: produced by machine from approved records."
+    },
+    "surfaceClass": {
+      "enum": ["authored", "derived", "operational"],
+      "description": "authored requires curated. derived and operational accept generated. Publishing below a surface's floor is IN-15."
+    },
+    "traceGranularity": {
+      "enum": ["artifact", "section", "sentence"],
+      "description": "Coarser is permitted and must be stated. An undeclared granularity is IN-14 and invites a reader to assume the finest one."
+    },
+    "tracePath": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/traceEntry" },
+      "description": "Required when class is curated or assisted."
+    },
+    "disclosure": {
+      "type": "object",
+      "description": "Required when class is assisted or generated. Must be visible where a reader encounters the artifact.",
+      "required": ["text", "visible"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "visible": { "const": true }
+      }
+    },
+    "declaredAt": { "type": "string", "format": "date-time" },
+    "embeds": {
+      "type": "array",
+      "description": "Authorship ids of embedded artifacts. The containing artifact takes the weakest class present.",
+      "items": { "type": "string" }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "class": { "enum": ["curated", "assisted"] } } },
+      "then": { "required": ["tracePath"] }
+    },
+    {
+      "if": { "properties": { "class": { "enum": ["assisted", "generated"] } } },
+      "then": { "required": ["disclosure"] }
+    },
+    {
+      "if": { "properties": { "surfaceClass": { "const": "authored" } } },
+      "then": { "properties": { "class": { "const": "curated" } } }
+    }
+  ]
+}
